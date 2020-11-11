@@ -2,7 +2,10 @@ BIN = kristhoefer
 
 SOURCES = \
 		  main.c \
-		  i2c.c
+		  i2c.c \
+		  adc.c \
+		  timer.c \
+		  serial.c
 
 PORT =/dev/ttyS3
 MCU=atmega328p
