@@ -3,9 +3,11 @@
 
 # Object files
 *.o
+*.P
 *.ko
 *.obj
 *.elf
+*.lss
 
 # Linker output
 *.ilk
