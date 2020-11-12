@@ -16,7 +16,7 @@ void uart_init(void) {
 	stdout = &uart_stdout;
 }
 
-int uart_putchar(char chr, FILE* stream) {
+int uart_putchar(char chr, FILE *stream) {
 	if (chr == '\n') {
 		uart_putchar('\r', NULL);
 	}
