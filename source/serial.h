@@ -1,6 +1,9 @@
 #ifndef SERIAL_H_
 #define SERIAL_H_
 
+#include <avr/pgmspace.h>
+#include <stdio.h>
+
 #define BAUDRATE 38400
 #define UBRR (F_CPU/16/BAUDRATE-1)
 

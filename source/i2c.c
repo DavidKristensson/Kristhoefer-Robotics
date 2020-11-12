@@ -109,7 +109,7 @@ inline uint8_t i2c_get_status(void) {
 	return status;
 }
 
-inline void i2c_xmit_addr(uint8_t eeprom_addr, uint8_t i2c_rw) {
+inline void i2c_xmit_addr(uint8_t addr, uint8_t i2c_rw) {
 	/*
 		In Transmit mode, TWDR contains the next byte to be transmitted. In Receive mode, the TWDR contains
 		the last byte received.
@@ -122,7 +122,7 @@ inline void i2c_xmit_addr(uint8_t eeprom_addr, uint8_t i2c_rw) {
 		Await until TWI has finished its current job AKA TWINT bit is set and ACK/NACK pulse has been sent
 	*/
 
-	TWDR = (eeprom_addr & 0xfe) | (i2c_rw & 0x01);
+	TWDR = (addr & 0xfe) | (i2c_rw & 0x01);
 
 	TWCR = (1 << TWINT) | (1 << TWEN);
 
@@ -147,7 +147,7 @@ inline void i2c_xmit_byte(uint8_t byte) {
 
 
 
-inline void eeprom_wait_until_write_complete() {
+inline void wait_until_write_complete() {
 	/*
 		If the device is still busy with the write cycle, no ACK will be returned. If the
 		cycle is complete, the device will return the ACK and the master can then proceed
@@ -161,7 +161,7 @@ inline void eeprom_wait_until_write_complete() {
 	}
 }
 
-void eeprom_write_byte(uint8_t controlRegister, uint8_t byte) {
+void write_byte(uint8_t controlRegister, uint8_t byte) {
 	/*
 		Start communication
 		Transmit address to the EEPROM memory and Write
@@ -173,7 +173,7 @@ void eeprom_write_byte(uint8_t controlRegister, uint8_t byte) {
 	*/
 	i2c_start();
 	i2c_meaningful_status(i2c_get_status());	// START
-	i2c_xmit_addr(0x80, I2C_W);
+	i2c_xmit_addr(0x80, I2C_W);					// should be 0x80 but try 0x40 aswell
 	i2c_meaningful_status(i2c_get_status());	// MT SLA + W, ACK
 
 	i2c_xmit_byte(controlRegister);				
@@ -184,6 +184,6 @@ void eeprom_write_byte(uint8_t controlRegister, uint8_t byte) {
 
 	i2c_stop();
 	
-	eeprom_wait_until_write_complete();
+	wait_until_write_complete();
 	
 }

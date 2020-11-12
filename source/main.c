@@ -7,45 +7,41 @@
 #include <string.h>
 
 #include "i2c.h"
+#include "pca9685.h"
+
+#include <stdint.h>
+
+
 
 int main(void) {
+	uint8_t prescalerValue = 0x64;
 	i2c_init();
 	uart_init();
 
-	//eeprom_write_byte(PCA9685_MODE1, 0x00);
+	pca9685_set_prescaler(prescalerValue);
 	
-	eeprom_write_byte(PCA9685_MODE1, 0x01); // sleep mode enabled for changing prescaler
-	eeprom_write_byte(PCA9685_PRESCALE, 0x79); // changing prescaler 121 = 0x79
-	eeprom_write_byte(PCA9685_MODE1, 0x00); // disabled sleep mode for normal operation
+	pca9685_set_pwm(bottomServo, 0, 0x7D0);
+	pca9685_set_pwm(horizontalServo, 0, 0x3E8);
+	pca9685_set_pwm(verticalServo, 0, 0x640);
+	pca9685_set_pwm(clawServo, 0, 0x5DC);
 	/*
-		Prescale value = (osc_clock / (4096 * update_rate)) - 1
-		121 = (25 Mhz / (4096 * 50)) - 1  
+		Bottom servo:
+			Min val: 0x190
+			Max val: 0x7D0
+			Middle val: 0x41C
+		Horizontal servo:
+			Min val: 0x2BC Watch out for vertical servo values
+			Max val: 0x7D0
+			Middle val: 0x3E8
+		Vertical servo:
+			Min val: 0x514
+			Max val: 0x7D0
+			Middle val: 0x640
+		Claw servo:
+			Min val: 0x5DC
+			Max val: 0x76C
 	*/
-	
-	eeprom_write_byte(PCA9685_LED0_ON_L, 0x00); // ON LOW
-	printf_P(PSTR("------ON LOW------\n"));
-	eeprom_write_byte(PCA9685_LED0_ON_H, 0x00); // ON HIGH
-	printf_P(PSTR("------ON HIGH------\n"));
-
-	eeprom_write_byte(PCA9685_LED0_OFF_L, 0xFF); // OFF LOW
-	printf_P(PSTR("------OFF LOW------\n"));
-	eeprom_write_byte(PCA9685_LED0_OFF_H, 0x05); // OFF HIGH
-	printf_P(PSTR("------OFF HIGH------\n"));
-	_delay_ms(1000);
-
-	/*
-	ON L = 0x00
-	ON H = 0x00
-
-	OFF L = 0xFF
-	OFF H = 0x01-0x07 min-max ranges
-	*/
-
 	while (1) {
-
 	}
-
-
-
 	return 0;
 }

@@ -3,8 +3,9 @@ BIN = kristhoefer
 SOURCES = \
 		  main.c \
 		  i2c.c \
-		  serial.c
-PORT =/dev/ttyS4
+		  serial.c \
+		  pca9685.c
+PORT =/dev/ttyS5
 MCU=atmega328p
 
 CC =avr-gcc

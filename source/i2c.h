@@ -19,20 +19,21 @@
 #define PCA9685_LED0_OFF_L 0x08 /**< LED0 off tick, low byte */
 #define PCA9685_LED0_OFF_H 0x09 /**< LED0 off tick, high byte */
 
-#define PCA9685_LED1_ON_L 0xA0  /**< LED1 on tick, low byte*/
-#define PCA9685_LED1_ON_H 0xA1  /**< LED1 on tick, high byte*/
-#define PCA9685_LED1_OFF_L 0xA2 /**< LED1 off tick, low byte */
-#define PCA9685_LED1_OFF_H 0xA3 /**< LED1 off tick, high byte */
+#define PCA9685_LED1_ON_L 0x0A  /**< LED1 on tick, low byte*/
+#define PCA9685_LED1_ON_H 0x0B  /**< LED1 on tick, high byte*/
+#define PCA9685_LED1_OFF_L 0x0C /**< LED1 off tick, low byte */
+#define PCA9685_LED1_OFF_H 0x0D /**< LED1 off tick, high byte */
 
-#define PCA9685_LED2_ON_L 0xA4  /**< LED2 on tick, low byte*/
-#define PCA9685_LED2_ON_H 0xA5  /**< LED2 on tick, high byte*/
-#define PCA9685_LED2_OFF_L 0xA6 /**< LED2 off tick, low byte */
-#define PCA9685_LED2_OFF_H 0xA7 /**< LED2 off tick, high byte */
+#define PCA9685_LED2_ON_L 0x0E  /**< LED2 on tick, low byte*/
+#define PCA9685_LED2_ON_H 0x0F  /**< LED2 on tick, high byte*/
+#define PCA9685_LED2_OFF_L 0x10 /**< LED2 off tick, low byte */
+#define PCA9685_LED2_OFF_H 0x11 /**< LED2 off tick, high byte */
 
-#define PCA9685_LED3_ON_L 0xA8  /**< LED3 on tick, low byte*/
-#define PCA9685_LED3_ON_H 0xA9  /**< LED3 on tick, high byte*/
-#define PCA9685_LED3_OFF_L 0xB0 /**< LED3 off tick, low byte */
-#define PCA9685_LED3_OFF_H 0xB1 /**< LED3 off tick, high byte */
+#define PCA9685_LED3_ON_L 0x12  /**< LED3 on tick, low byte*/
+#define PCA9685_LED3_ON_H 0x13  /**< LED3 on tick, high byte*/
+#define PCA9685_LED3_OFF_L 0x14 /**< LED3 off tick, low byte */
+#define PCA9685_LED3_OFF_H 0x15 /**< LED3 off tick, high byte */
+
 // etc all 16:  LED15_OFF_H 0x45
 //-----------------------------------------------------------
 #define PCA9685_ALL_LED_ON_L 0xFA  /**< load all the LEDn_ON registers, low */
@@ -75,9 +76,9 @@ void i2c_meaningful_status(uint8_t status);
 
 
 void i2c_xmit_byte(uint8_t byte);
-void eeprom_write_byte(uint8_t eeprom_addr_write, uint8_t byte);
+void write_byte(uint8_t addr_write, uint8_t byte);
 
-void eeprom_wait_until_write_complete(void);
+void wait_until_write_complete(void);
 
-void i2c_xmit_addr(uint8_t eeprom_addr, uint8_t i2c_rw);
+void i2c_xmit_addr(uint8_t addr, uint8_t i2c_rw);
 #endif
