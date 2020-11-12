@@ -5,9 +5,9 @@ SOURCES = \
 		  i2c.c \
 		  adc.c \
 		  timer.c \
-		  serial.c
+		  serial.c 
 
-PORT =/dev/ttyS3
+PORT =/dev/ttyS4
 MCU=atmega328p
 
 CC =avr-gcc

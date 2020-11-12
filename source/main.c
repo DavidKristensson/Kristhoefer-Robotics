@@ -11,30 +11,30 @@
 #include "serial.h"
 #include "timer.h"
 
-
+	/* Value we get from reading of ADC */
 volatile unsigned int previousReadADCvalue = 0;
+volatile unsigned int Y_Value = 0;
+volatile unsigned int X_Value = 0;
 
 int main (void) {
 
 	timer0_init();
 	uart_init();
 	init_single_conversion_mode();
-	
-	
-	//uart_putchar('x');
 
 	while (1) {
-		//printf_P(PSTR("Testar skriva till uart\n"));
+		printf_P(PSTR("X-axis value: %d\n"), X_Value);
+		printf_P(PSTR("Y-axis value: %d\n"), Y_Value);
 	}
 
 	return 0;
 }
 
-// timer0 interrupt to execute every 10 ms (WORKS NOW)
+	/* timer0 interrupt to execute every 10 ms  */
 ISR(TIMER0_COMPA_vect)
 {
-	ADCSRA |= (1 << ADSC);  // Start the ADC conversion below here
-	//printf_P(PSTR("Testar skriva till uart\n"));
+	/* Start the ADC conversion below here */
+	ADCSRA |= (1 << ADSC);  // 
 }
 
 ISR(ADC_vect) {
@@ -45,8 +45,28 @@ ISR(ADC_vect) {
 	uint8_t low = ADCL; 
 	uint8_t high = ADCH;
 
-	// combine the two bytes
+	/* Combine the two bytes */
 	previousReadADCvalue = (high << 8) | low;
-	printf_P(PSTR("Previous read adc value: %d\n"), previousReadADCvalue);
+
+	/* Toggle analog pin to read so next time 
+	in the interrupt we read from pin 1 
+	instead of 0 or the other way around*/
+	ADMUX ^= (1 << MUX0);
+
+
+	/* Print out value of X-axis or Y-axis 
+	If index MUX0 is 1 in ADMUX registry do this*/
+	if (ADMUX & (1 << MUX0)) {
+		//printf_P(PSTR("Y-axis value: %d\n"), previousReadADCvalue);
+		
+		Y_Value = previousReadADCvalue; 
+		
+	}
+	else {
+		//printf_P(PSTR("X-axis value: %d\n"), previousReadADCvalue);
+		X_Value = previousReadADCvalue;
+	}
+
+
 }
 
