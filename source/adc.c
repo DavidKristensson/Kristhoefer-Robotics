@@ -2,8 +2,10 @@
 #include "adc.h"
 
 void init_single_conversion_mode(){
-    ADMUX |= (1 << MUX0);   // Init for activating analog pin 1, we start with analog pin 1 
-                            //and then read out analog pin 0 in the interrupt.
+    /* Setup ADMUX for the next ADC reading so that
+    next time in this interrupt function we will read from
+    ADC0 ie A0 analog input on arduino */
+    ADMUX = 0x00;
     
     ADMUX |= (1 << REFS0);      // use AVcc as the reference
                                 

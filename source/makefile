@@ -8,7 +8,7 @@ SOURCES = \
 		  serial.c \
 		  pca9685.c
 
-PORT =/dev/ttyS5
+PORT =/dev/ttyS3
 MCU=atmega328p
 
 CC =avr-gcc
