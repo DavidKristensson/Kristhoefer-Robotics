@@ -27,8 +27,8 @@
 #define maxHorizontalServo 0x7D0
 #define minHorizontalServo 0x2BC
 
-#define direction_increasing 32
-#define direction_decreasing -32
+#define direction_increasing 8 //Value of 4 when not having prints in loop
+#define direction_decreasing -8 //Value of -4 when not having prints in loop
 
 /* Value we get from reading of ADC */
 volatile unsigned int previousReadADCvalue = 0;
@@ -45,7 +45,7 @@ unsigned int mappedValue_J1_Y = 0;
 unsigned int mappedValue_J2_X = 0;
 unsigned int mappedValue_J2_Y = 0;
 
-unsigned int mappedValue_J1_X_mid = 1211;
+unsigned int mappedValue_J1_X_mid = 1211; //Assigned values from idle joysticks
 unsigned int mappedValue_J1_Y_mid = 1497;
 unsigned int mappedValue_J2_X_mid = 1655;
 unsigned int mappedValue_J2_Y_mid = 1365;
@@ -60,8 +60,9 @@ unsigned int servoClaw_position = 0x5DC;
 unsigned int servoVertical_position = 0x4B0;
 unsigned int servoHorizontal_position = 0x514;
 
-signed char servoBottom_direction = 32;
-signed char servoClaw_direction = 32;
+//The higher the value the larger each step will be, directly affecting the speed of the servo
+signed char servoBottom_direction = 8;
+signed char servoClaw_direction = 8;
 signed char servoVertical_direction = 32;
 signed char servoHorizontal_direction = 32;
 
@@ -104,9 +105,10 @@ int main(void) {
 			Mid val: 0x6A4 - Decimal: 1700
 	*/
 	while (1) {
+		//Claw servo reacts to vertical servo joystick
 		/*
 		-----------------------------------------------------------------------------------------
-											MAPPING VALUES
+											MAPPING VALUES and SETTING DIRECTION
 		-----------------------------------------------------------------------------------------
 		*/
 		/* Bottom servo mapped value */
@@ -122,12 +124,6 @@ int main(void) {
 
 		//Claw servo
 		mappedValue_J1_Y = mapValueFromJoystick(joystick_1_Y_Value, 0, 1023, 1100, 1900); // J1_Y BOTTOM
-		/*
-		if (mappedValue_J1_Y < 1500) {
-			mappedValue_J1_Y = 1500 + (1500 - mappedValue_J1_Y); //Claw will be closed when joystick is not 
-															//moved and opened when pushed on either way of Y axis
-		}
-		*/
 		if (mappedValue_J1_Y > mappedValue_J1_Y_mid && mappedValue_J1_Y > mappedValue_J1_Y_last) {
 			servoClaw_direction = direction_increasing;
 		}
@@ -144,53 +140,71 @@ int main(void) {
 			servoVertical_direction = direction_decreasing;
 		}
 
-
 		//Horizontal servo
 		mappedValue_J2_Y = mapValueFromJoystick(joystick_2_Y_Value, 0, 1023, 0x2BC, 0x7D0);
-		if (mappedValue_J2_Y > mappedValue_J2_Y_mid&& mappedValue_J2_Y > mappedValue_J2_Y_last) {
+		if (mappedValue_J2_Y > mappedValue_J2_Y_mid && mappedValue_J2_Y > mappedValue_J2_Y_last) {
 			servoHorizontal_direction = direction_increasing;
 		}
 		else if (mappedValue_J2_Y < mappedValue_J2_Y_mid && mappedValue_J2_Y < mappedValue_J2_Y_last) {
 			servoHorizontal_direction = direction_decreasing;
 		}
-
 		/*
+		*/
+		/*
+
 		-----------------------------------------------------------------------------------------
 											SET PWN
 		-----------------------------------------------------------------------------------------
 		*/
 
 		//Bottom servo send position + direction to servo
-		if (servoBottom_position <= maxBottomServo && servoBottom_direction == direction_increasing) {
+		if ((mappedValue_J1_X > (mappedValue_J1_X_mid + 5) || mappedValue_J1_X < (mappedValue_J1_X_mid - 5)) && 
+			servoBottom_position <= maxBottomServo && servoBottom_direction == direction_increasing) {
 			pca9685_set_pwm(bottomServo, 0, (servoBottom_position + servoBottom_direction));
+			servoBottom_position += servoBottom_direction;
 		}
-		else if (servoBottom_position >= minBottomServo && servoBottom_direction == direction_decreasing) {
+		else if ((mappedValue_J1_X > (mappedValue_J1_X_mid + 5) || mappedValue_J1_X < (mappedValue_J1_X_mid - 5)) && 
+			servoBottom_position >= minBottomServo && servoBottom_direction == direction_decreasing) {
 			pca9685_set_pwm(bottomServo, 0, (servoBottom_position + servoBottom_direction));
+			servoBottom_position += servoBottom_direction;
 		}
-
 		//Claw servo send position + direction to servo
-		if (servoClaw_position <= maxClawServo && servoClaw_direction == direction_increasing) {
+		if ((mappedValue_J1_Y > (mappedValue_J1_Y_mid + 5) || mappedValue_J1_Y < (mappedValue_J1_Y_mid - 5)) && 
+			servoClaw_position <= maxClawServo && servoClaw_direction == direction_increasing) {
 			pca9685_set_pwm(clawServo, 0, (servoClaw_position + servoClaw_direction));
+			servoClaw_position += servoClaw_direction; //TEST
 		}
-		else if (servoClaw_position >= minClawServo && servoClaw_direction == direction_decreasing) {
+		else if ((mappedValue_J1_Y > (mappedValue_J1_Y_mid + 5) || mappedValue_J1_Y < (mappedValue_J1_Y_mid - 5)) && 
+			servoClaw_position >= minClawServo && servoClaw_direction == direction_decreasing) {
 			pca9685_set_pwm(clawServo, 0, (servoClaw_position + servoClaw_direction));
+			servoClaw_position += servoClaw_direction; //TEST
 		}
 
 		//Vertical servo send position + direction to servo
-		if (servoVertical_position <= maxVerticalServo && servoVertical_direction == direction_increasing) {
+		if ((mappedValue_J2_X > (mappedValue_J2_X_mid + 5) || mappedValue_J2_X < (mappedValue_J2_X_mid - 5)) && 
+			servoVertical_position <= maxVerticalServo && servoVertical_direction == direction_increasing) {
 			pca9685_set_pwm(verticalServo, 0, (servoVertical_position + servoVertical_direction));
+			servoVertical_position += servoVertical_direction;
 		}
-		else if (servoVertical_position >= minVerticalServo && servoVertical_direction == direction_decreasing) {
+		else if ((mappedValue_J2_X > (mappedValue_J2_X_mid + 5) || mappedValue_J2_X < (mappedValue_J2_X_mid - 5)) && 
+			servoVertical_position >= minVerticalServo && servoVertical_direction == direction_decreasing) {
 			pca9685_set_pwm(verticalServo, 0, (servoVertical_position + servoVertical_direction));
+			servoVertical_position += servoVertical_direction;
 		}
 
 		//Horizontal servo send position + direction to servo
-		if (servoHorizontal_position <= maxHorizontalServo && servoHorizontal_direction == direction_increasing) {
-			pca9685_set_pwm(clawServo, 0, (servoHorizontal_position + servoHorizontal_direction));
-		}
-		else if (servoHorizontal_position >= minHorizontalServo && servoHorizontal_direction == direction_decreasing) {
+		if ((mappedValue_J2_Y > (mappedValue_J2_Y_mid + 5) || mappedValue_J2_Y < (mappedValue_J2_Y_mid - 5)) && 
+			servoHorizontal_position <= maxHorizontalServo && servoHorizontal_direction == direction_increasing) {
 			pca9685_set_pwm(horizontalServo, 0, (servoHorizontal_position + servoHorizontal_direction));
+			servoHorizontal_position += servoHorizontal_direction;
 		}
+		else if ((mappedValue_J2_Y > (mappedValue_J2_Y_mid + 5) || mappedValue_J2_Y < (mappedValue_J2_Y_mid - 5)) && 
+			servoHorizontal_position >= minHorizontalServo && servoHorizontal_direction == direction_decreasing) {
+			pca9685_set_pwm(horizontalServo, 0, (servoHorizontal_position + servoHorizontal_direction));
+			servoHorizontal_position += servoHorizontal_direction;
+		}
+		/*
+		*/
 
 		/*
 		-----------------------------------------------------------------------------------------
@@ -199,23 +213,30 @@ int main(void) {
 		*/
 
 		//THESE IF STATEMENTS ARE NOT WORKING, THE VALUES GO PAST ITS MAX
+		//Middle value is not specific, needs to be a span of values
+		//If value has passed max value reset value to be below max
 
+		/*
 		//  Bottom servo add to positon
-		if (mappedValue_J1_X != mappedValue_J1_X_mid && servoBottom_direction == direction_increasing && servoBottom_position <= maxBottomServo) {
+		if (mappedValue_J1_X != mappedValue_J1_X_mid && 
+			servoBottom_direction == direction_increasing && servoBottom_position <= maxBottomServo) {
 			servoBottom_position += servoBottom_direction;
 		}
-		else if (mappedValue_J1_X != mappedValue_J1_X_mid && servoBottom_direction == direction_decreasing && servoBottom_position >= minBottomServo) {
+		else if (mappedValue_J1_X != mappedValue_J1_X_mid && 
+			servoBottom_direction == direction_decreasing && servoBottom_position >= minBottomServo) {
 			servoBottom_position += servoBottom_direction;
 		}
-
 		//  Claw servo add to positon
-		if (mappedValue_J1_Y != mappedValue_J1_Y_mid && servoClaw_direction == direction_increasing && servoClaw_position <= maxClawServo) {
+		if (mappedValue_J1_Y > (mappedValue_J1_Y_mid + 5) || mappedValue_J1_Y < (mappedValue_J1_Y_mid - 5) &&
+			servoClaw_direction == direction_increasing && servoClaw_position <= maxClawServo) {
 			servoClaw_position += servoClaw_direction;
 		}
-		else if (mappedValue_J1_Y != mappedValue_J1_Y_mid && servoClaw_direction == direction_decreasing && servoClaw_position >= minClawServo) {
+		else if (mappedValue_J1_Y > (mappedValue_J1_Y_mid + 5) || mappedValue_J1_Y < (mappedValue_J1_Y_mid - 5) &&
+			servoClaw_direction == direction_decreasing && servoClaw_position >= minClawServo) {
 			servoClaw_position += servoClaw_direction;
 		}
-
+		*/
+		/*
 		//Vertical servo add to position
 		if (mappedValue_J2_X != mappedValue_J2_X_mid && servoVertical_direction == direction_increasing && servoVertical_position <= maxVerticalServo) {
 			servoVertical_position += servoVertical_direction;
@@ -231,6 +252,7 @@ int main(void) {
 		else if (mappedValue_J2_Y != mappedValue_J2_Y_mid && servoHorizontal_direction == direction_decreasing && servoHorizontal_position >= minHorizontalServo) {
 			servoHorizontal_position += servoHorizontal_direction;
 		}
+		*/
 
 		/*
 		if (mappedValue_J1_Y != 1211 && servoClaw_direction == direction_increasing && servoBottom_position <= maxBottomServo) {
@@ -252,12 +274,27 @@ int main(void) {
 		printf_P(PSTR("servoBottom_direction: %d\n"), servoVertical_direction);
 		printf_P(PSTR("------------------------\n"));
 		*/
-		
+		/*
 		printf_P(PSTR("servoBottom_position: %d\n"), servoHorizontal_position);
 		printf_P(PSTR("mappedValue_J1_X: %d\n"), mappedValue_J2_Y);
 		printf_P(PSTR("mappedValue_J1_X_last: %d\n"), mappedValue_J2_Y_last);
 		printf_P(PSTR("servoBottom_direction: %d\n"), servoHorizontal_direction);
 		printf_P(PSTR("------------------------\n"));
+		*/
+		if (!(mappedValue_J1_Y > (mappedValue_J1_Y_mid + 5) || mappedValue_J1_Y < (mappedValue_J1_Y_mid - 5))) {
+			printf_P(PSTR("Claw joystickValue: %d\n"), mappedValue_J1_Y);
+		}
+		else if (mappedValue_J1_X != mappedValue_J1_X_mid) {
+			printf_P(PSTR("Bottom joystickValue: %d\n"), mappedValue_J1_X);
+		}
+		/*
+		1497 .... 1211
+		printf_P(PSTR("Bottom mappedValue: %d\n"), mappedValue_J1_X);
+		printf_P(PSTR("Bottom joystickValue: %d\n"), joystick_1_X_Value);
+		printf_P(PSTR("Claw mappedValue: %d\n"), mappedValue_J1_Y);
+		printf_P(PSTR("Claw joystickValue: %d\n"), joystick_1_Y_Value);
+		printf_P(PSTR("------------------------\n"));
+		*/
 
 		mappedValue_J1_X_last = mappedValue_J1_X;
 		mappedValue_J1_Y_last = mappedValue_J1_Y;
