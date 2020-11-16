@@ -14,6 +14,7 @@
 
 #include "serial.h"
 #include "timer.h"
+#include "button.h"
 
 /* Value we get from reading of ADC */
 volatile unsigned int previousReadADCvalue = 0;
@@ -25,6 +26,13 @@ volatile unsigned int joystick_2_X_Value = 0;
 volatile unsigned int joystick_2_Y_Value = 0;
 
 volatile unsigned int ADCincrementor = 0;
+
+uint8_t button1_State_Now = 0; //This one is high when not pushed in for some reason
+uint8_t button2_State_Now = 0; //This one is low
+uint8_t button1_State_Last = 0;
+uint8_t button2_State_Last = 0;
+uint8_t button1_Flag = 0;
+uint8_t button2_Flag = 0;
 
 //Position_Max, Position_Min, Position, dsIncreasing, dsDeacreasing, ds, analog, analogLast, analogMid, address
 SERVO servoBottom =		{ 0x7D0, 0x190,	0x41C, 4, -4, 4, 0, 0, 1188, PCA9685_LED0_ON_L };
@@ -38,6 +46,7 @@ int main(void) {
 	uart_init();
 	adc_init();
 	i2c_init();
+	button_init();
 
 
 	pca9685_set_prescaler(prescalerValue);
@@ -63,18 +72,28 @@ int main(void) {
 		servoClaw.analog_Map_Last = servoClaw.analog_Map;
 		servoVertical.analog_Map_Last = servoVertical.analog_Map;
 		servoHorizontal.analog_Map_Last = servoHorizontal.analog_Map;
+
+		printf_P(PSTR("button1_Flag: %d\n"), button1_Flag);
+		printf_P(PSTR("button2_Flag: %d\n"), button2_Flag);
+		printf_P(PSTR("============================\n"));
 	}
 
 	return 0;
 }
 
 /* timer0 interrupt to execute every 10 ms  */
-ISR(TIMER0_COMPA_vect)
-{
+ISR(TIMER0_COMPA_vect){
+	button_set_buttonStateNow(&button1_State_Now, PIND, PD4);
+	button_set_buttonStateNow(&button2_State_Now, PIND, PD2);
+	button_set_flag(&button1_State_Now, &button1_State_Last, &button1_Flag, 1);
+	button_set_flag(&button2_State_Now, &button2_State_Last, &button2_Flag, 0);
+	button_set_buttonStateLast(&button1_State_Now, &button1_State_Last);
+	button_set_buttonStateLast(&button2_State_Now, &button2_State_Last);
 	/* Starts adc conversion and when 
 	conversion is done the ADC_vect 
 	interrupt function is started */
 	ADCSRA |= (1 << ADSC);  
+
 }
 
 ISR(ADC_vect) {

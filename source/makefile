@@ -6,8 +6,8 @@ SOURCES = \
 		  adc.c \
 		  timer.c \
 		  serial.c \
-		  pca9685.c
-
+		  pca9685.c \
+		  button.c
 PORT =/dev/ttyS5
 MCU=atmega328p
 
