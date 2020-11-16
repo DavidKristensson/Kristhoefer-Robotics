@@ -13,5 +13,7 @@ int uart_putchar(char chr, FILE* stream);
 
 char uart_getchar(void);
 
+void uart_get_string_from_user(unsigned char* stringInMain);
+
 #endif
 

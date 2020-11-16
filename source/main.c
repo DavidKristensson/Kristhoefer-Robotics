@@ -49,9 +49,10 @@ int main(void) {
 	button_init();
 
 
+<<<<<<< HEAD
 	pca9685_set_prescaler(prescalerValue);
 	pca9685_servo_start_positon(servoBottom, servoClaw, servoVertical, servoHorizontal);
-
+	char char_From_Esp32;
 	while (1) {
 		servoBottom.analog_Map = map(joystick_1_X_Value, 0, 1023, servoBottom.position_Min, servoBottom.position_Max);
 		servoClaw.analog_Map = map(joystick_1_Y_Value, 0, 1023, servoClaw.position_Min, servoClaw.position_Max);
@@ -76,6 +77,12 @@ int main(void) {
 		printf_P(PSTR("button1_Flag: %d\n"), button1_Flag);
 		printf_P(PSTR("button2_Flag: %d\n"), button2_Flag);
 		printf_P(PSTR("============================\n"));
+
+		/* Testing to get char to our Atmega from ESP32 via UART. */
+		char_From_Esp32 = uart_getchar();
+		printf_P(PSTR("Message from arduino is: %c\n"), char_From_Esp32);
+		//printf_P(PSTR("Testmessage uart"));
+		_delay_ms(1000);
 	}
 
 	return 0;
