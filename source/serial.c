@@ -16,19 +16,31 @@ void uart_init(void) {
 	stdout = &uart_stdout;
 }
 
+void uart_get_string_from_user(unsigned char* stringInMain) { // Gets input from user with uart_getchar() 
+															  // until read character is \n, then null terminates
+															  // the string and saves it to stringInMain.
+	char character = 'a';
+
+	int i = 0;
+	while (character != '\n') {
+		character = uart_getchar();
+		stringInMain[i] = character;
+		i++;
+	}
+	stringInMain[i] = '\0'; // Null terminate string
+}
+
 int uart_putchar(char chr, FILE *stream) {
 	if (chr == '\n') {
 		uart_putchar('\r', NULL);
 	}
-	while (!(UCSR0A & (1 << UDRE0)))
-		;
+	while (!(UCSR0A & (1 << UDRE0)));
 	UDR0 = chr;
 	return 0;
 }
 
 char uart_getchar(void) {
-	while (!(UCSR0A & (1 << RXC0)))
-		;
+	while (!(UCSR0A & (1 << RXC0)));
 	return UDR0;
 }
 

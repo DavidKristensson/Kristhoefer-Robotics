@@ -40,9 +40,9 @@ int main(void) {
 	i2c_init();
 
 
-	pca9685_set_prescaler(prescalerValue);
+	//pca9685_set_prescaler(prescalerValue);
 
-	pca9685_set_pwm(bottomServo, 0, 0x41C);
+	//pca9685_set_pwm(bottomServo, 0, 0x41C);
 	//pca9685_set_pwm(horizontalServo, 0, 0x3E8);
 	//pca9685_set_pwm(verticalServo, 0, 0x640);
 	//pca9685_set_pwm(clawServo, 0, 0x5DC);
@@ -66,19 +66,30 @@ int main(void) {
 			Max val: 0x76C - Decimal: 1900
 			Mid val: 0x6A4 - Decimal: 1700
 	*/
+
+	char char_From_Esp32;
 	while (1) {
+
+		/* Testing to get char to our Atmega from ESP32 via UART. */
+		char_From_Esp32 = uart_getchar();
+		printf_P(PSTR("Message from arduino is: %c\n"), char_From_Esp32);
+		//printf_P(PSTR("Testmessage uart"));
+		_delay_ms(1000);
+		
 		/* All values mapped here for test. We use min 400 and max 2000. */
 
 		/* Bottom servo mapped value */
-		mappedValue = mapValueFromJoystick(joystick_1_X_Value, 0, 1023, 400, 2000); // J1_X BOTTOM
-		pca9685_set_pwm(bottomServo, 0, mappedValue);
-		
-		mappedValue = mapValueFromJoystick(joystick_1_Y_Value, 0, 1023, 1100, 1900); // J1_X BOTTOM
-		if (mappedValue < 1500) {
-			mappedValue = 1500 + (1500 - mappedValue);
-		}
-		pca9685_set_pwm(clawServo, 0, mappedValue);
-		printf_P(PSTR("claw value: %d\n"), mappedValue);
+		//mappedValue = mapValueFromJoystick(joystick_1_X_Value, 0, 1023, 400, 2000); // J1_X BOTTOM
+		//pca9685_set_pwm(bottomServo, 0, mappedValue);
+		//
+		//mappedValue = mapValueFromJoystick(joystick_1_Y_Value, 0, 1023, 1100, 1900); // J1_X BOTTOM
+		//if (mappedValue < 1500) {
+		//	mappedValue = 1500 + (1500 - mappedValue);
+		//}
+		//pca9685_set_pwm(clawServo, 0, mappedValue);
+		//printf_P(PSTR("claw value: %d\n"), mappedValue);
+
+
 		///* Left side vertical servo mapped value */
 		//mappedValue = mapValueFromJoystick(joystick_1_Y_Value, 0, 1023, 400, 2000); // J1_Y LEFT SIDE
 		//printf_P(PSTR("mapped Left: %d\n"), mappedValue);
