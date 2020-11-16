@@ -27,7 +27,7 @@ volatile unsigned int joystick_2_Y_Value = 0;
 volatile unsigned int ADCincrementor = 0;
 
 //Position_Max, Position_Min, Position, dsIncreasing, dsDeacreasing, ds, analog, analogLast, analogMid, address
-SERVO servoBottom =		{ 0x7D0, 0x190,	0x41C, 4, -4, 4, 0, 0, 1211, PCA9685_LED0_ON_L };
+SERVO servoBottom =		{ 0x7D0, 0x190,	0x41C, 4, -4, 4, 0, 0, 1188, PCA9685_LED0_ON_L };
 SERVO servoClaw =		{ 0x76C, 0x5DC, 0x5DC, 4, -4, 4, 0, 0, 1698, PCA9685_LED3_ON_L };
 SERVO servoVertical	=	{ 0x7CF, 0x514, 0x514, 4, -4, 4, 0, 0, 1655, PCA9685_LED2_ON_L };
 SERVO servoHorizontal = { 0x7D0, 0x2BC, 0x4B0, 4, -4, 4, 0, 0, 1365, PCA9685_LED1_ON_L };
@@ -36,142 +36,28 @@ int main(void) {
 	uint8_t prescalerValue = 0x64;
 	timer0_init();
 	uart_init();
-	init_single_conversion_mode();
+	adc_init();
 	i2c_init();
 
 
 	pca9685_set_prescaler(prescalerValue);
-
-	//Start positon of arm on reboot
-	pca9685_set_pwm(servoBottom.address, 0, servoBottom.position);
-	pca9685_set_pwm(servoClaw.address, 0, servoClaw.position);
-	pca9685_set_pwm(servoVertical.address, 0, servoVertical.position);
-	pca9685_set_pwm(servoHorizontal.address, 0, servoVertical.position);
+	pca9685_servo_start_positon(servoBottom, servoClaw, servoVertical, servoHorizontal);
 
 	while (1) {
-		/*
-		-----------------------------------------------------------------------------------------
-											MAPPING VALUES and SETTING Velocity
-		-----------------------------------------------------------------------------------------
-		*/
-		//Bottom servo
 		servoBottom.analog_Map = map(joystick_1_X_Value, 0, 1023, servoBottom.position_Min, servoBottom.position_Max);
-		if (servoBottom.analog_Map > servoBottom.analog_Map_Mid &&
-			servoBottom.analog_Map > servoBottom.analog_Map_Last) {
-			servoBottom.velocity = servoBottom.velocity_Increasing;
-		}
-		else if (servoBottom.analog_Map < servoBottom.analog_Map_Mid &&
-			servoBottom.analog_Map < servoBottom.analog_Map_Last) {
-			servoBottom.velocity = servoBottom.velocity_Decreasing;
-		}
-
-		//Claw servo
 		servoClaw.analog_Map = map(joystick_1_Y_Value, 0, 1023, servoClaw.position_Min, servoClaw.position_Max);
-		if (servoClaw.analog_Map > servoClaw.analog_Map_Mid &&
-			servoClaw.analog_Map > servoClaw.analog_Map_Last) {
-			servoClaw.velocity = servoClaw.velocity_Increasing;
-		}
-		else if (servoClaw.analog_Map < servoClaw.analog_Map_Mid &&
-			servoClaw.analog_Map < servoClaw.analog_Map_Last) {
-			servoClaw.velocity = servoClaw.velocity_Decreasing;
-		}
-
-		//Vertical servo
 		servoVertical.analog_Map = map(joystick_2_X_Value, 0, 1023, servoVertical.position_Min, servoVertical.position_Max);
-		if (servoVertical.analog_Map > servoVertical.analog_Map_Mid&&
-			servoVertical.analog_Map > servoVertical.analog_Map_Last) {
-			servoVertical.velocity = servoVertical.velocity_Increasing;
-		}
-		else if (servoVertical.analog_Map < servoVertical.analog_Map_Mid &&
-			servoVertical.analog_Map < servoVertical.analog_Map_Last) {
-			servoVertical.velocity = servoVertical.velocity_Decreasing;
-		}
-
-		//Horizontal servo
 		servoHorizontal.analog_Map = map(joystick_2_Y_Value, 0, 1023, servoHorizontal.position_Min, servoHorizontal.position_Max);
-		if (servoHorizontal.analog_Map > servoHorizontal.analog_Map_Mid&&
-			servoHorizontal.analog_Map > servoHorizontal.analog_Map_Last) {
-			servoHorizontal.velocity = servoHorizontal.velocity_Increasing;
-		}
-		else if (servoHorizontal.analog_Map < servoHorizontal.analog_Map_Mid &&
-			servoHorizontal.analog_Map < servoHorizontal.analog_Map_Last) {
-			servoHorizontal.velocity = servoHorizontal.velocity_Decreasing;
-		}
-		/*
-		-----------------------------------------------------------------------------------------
-											SET PWN
-		-----------------------------------------------------------------------------------------
-		*/
-		//Bottom servo
-		if ((servoBottom.analog_Map > (servoBottom.analog_Map_Mid + 5) ||
-		servoBottom.analog_Map < (servoBottom.analog_Map_Mid - 5)) &&
-		servoBottom.position <= servoBottom.position_Max &&
-		servoBottom.velocity == servoBottom.velocity_Increasing) {
-			pca9685_set_pwm(servoBottom.address, 0, (servoBottom.position + servoBottom.velocity));
-			servoBottom.position += servoBottom.velocity;
-		}
-		else if ((servoBottom.analog_Map > (servoBottom.analog_Map_Mid + 5) ||
-		servoBottom.analog_Map < (servoBottom.analog_Map_Mid - 5)) &&
-		servoBottom.position >= servoBottom.position_Min &&
-		servoBottom.velocity == servoBottom.velocity_Decreasing) {
-			pca9685_set_pwm(servoBottom.address, 0, (servoBottom.position + servoBottom.velocity));
-			servoBottom.position += servoBottom.velocity;
-		}
 
+		pca9685_set_velocity(&servoBottom);
+		pca9685_set_velocity(&servoClaw);
+		pca9685_set_velocity(&servoVertical);
+		pca9685_set_velocity(&servoHorizontal);
 
-		//Claw
-		if ((servoClaw.analog_Map > (servoClaw.analog_Map_Mid + 5) ||
-		servoClaw.analog_Map < (servoClaw.analog_Map_Mid - 5)) &&
-		servoClaw.position <= servoClaw.position_Max &&
-		servoClaw.velocity == servoClaw.velocity_Increasing) {
-			pca9685_set_pwm(servoClaw.address, 0, (servoClaw.position + servoClaw.velocity));
-			servoClaw.position += servoClaw.velocity;
-		}
-		else if ((servoClaw.analog_Map > (servoClaw.analog_Map_Mid + 5) ||
-		servoClaw.analog_Map < (servoClaw.analog_Map_Mid - 5)) &&
-		servoClaw.position >= servoClaw.position_Min &&
-		servoClaw.velocity == servoClaw.velocity_Decreasing) {
-			pca9685_set_pwm(servoClaw.address, 0, (servoClaw.position + servoClaw.velocity));
-			servoClaw.position += servoClaw.velocity;
-		}
-
-		//Vertical
-		if ((servoVertical.analog_Map > (servoVertical.analog_Map_Mid + 5) ||
-		servoVertical.analog_Map < (servoVertical.analog_Map_Mid - 5)) &&
-		servoVertical.position <= servoVertical.position_Max &&
-		servoVertical.velocity == servoVertical.velocity_Increasing) {
-			pca9685_set_pwm(servoVertical.address, 0, (servoVertical.position + servoVertical.velocity));
-			servoVertical.position += servoVertical.velocity;
-		}
-		else if ((servoVertical.analog_Map > (servoVertical.analog_Map_Mid + 5) ||
-		servoVertical.analog_Map < (servoVertical.analog_Map_Mid - 5)) &&
-		servoVertical.position >= servoVertical.position_Min &&
-		servoVertical.velocity == servoVertical.velocity_Decreasing) {
-			pca9685_set_pwm(servoVertical.address, 0, (servoVertical.position + servoVertical.velocity));
-			servoVertical.position += servoVertical.velocity;
-		}
-
-		//Horizontal
-		if ((servoHorizontal.analog_Map > (servoHorizontal.analog_Map_Mid + 5) ||
-			servoHorizontal.analog_Map < (servoHorizontal.analog_Map_Mid - 5)) &&
-			servoHorizontal.position <= servoHorizontal.position_Max &&
-			servoHorizontal.velocity == servoHorizontal.velocity_Increasing) {
-			pca9685_set_pwm(servoHorizontal.address, 0, (servoHorizontal.position + servoHorizontal.velocity));
-			servoHorizontal.position += servoHorizontal.velocity;
-		}
-		else if ((servoHorizontal.analog_Map > (servoHorizontal.analog_Map_Mid + 5) ||
-			servoHorizontal.analog_Map < (servoHorizontal.analog_Map_Mid - 5)) &&
-			servoHorizontal.position >= servoHorizontal.position_Min &&
-			servoHorizontal.velocity == servoHorizontal.velocity_Decreasing) {
-			pca9685_set_pwm(servoHorizontal.address, 0, (servoHorizontal.position + servoHorizontal.velocity));
-			servoHorizontal.position += servoHorizontal.velocity;
-		}
-
-		/*
-		-----------------------------------------------------------------------------------------
-									Assign last
-		-----------------------------------------------------------------------------------------
-		*/
+		pca9685_step_servo(&servoBottom);
+		pca9685_step_servo(&servoClaw);
+		pca9685_step_servo(&servoVertical);
+		pca9685_step_servo(&servoHorizontal);
 
 		servoBottom.analog_Map_Last = servoBottom.analog_Map;
 		servoClaw.analog_Map_Last = servoClaw.analog_Map;

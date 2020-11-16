@@ -25,7 +25,53 @@ void pca9685_set_pwm(uint8_t servoAddress, uint16_t on, uint16_t off){
 	write_byte(servoAddress + 3, (off >> 8));
 }
 
-// Function to map the joystick value 0-1023 into robot servos values 400-2000 
+void pca9685_servo_start_positon(SERVO servo1, SERVO servo2, SERVO servo3, SERVO servo4) {
+	/*
+		Send position to each servo
+	*/
+	pca9685_set_pwm(servo1.address, 0, servo1.position);
+	pca9685_set_pwm(servo2.address, 0, servo2.position);
+	pca9685_set_pwm(servo3.address, 0, servo3.position);
+	pca9685_set_pwm(servo4.address, 0, servo4.position);
+}
+
+
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
+	/*
+		Maps a value to another
+	*/
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+
+void pca9685_set_velocity(SERVO* servo) {
+	/*
+		Sets the velocity to increasing or decreasing depending on if the 
+		mapped analog value is below the middle point and decreasing or above it and increasing.
+		This prevents a change in velocity when a joystick for example returns to the middle after release.
+	*/
+	if (servo->analog_Map > servo->analog_Map_Mid && servo->analog_Map > servo->analog_Map_Last) {
+		servo->velocity = servo->velocity_Increasing;
+	}
+	else if (servo->analog_Map < servo->analog_Map_Mid && servo->analog_Map < servo->analog_Map_Last) {
+		servo->velocity = servo->velocity_Decreasing;
+	}
+}
+
+void pca9685_step_servo(SERVO* servo) {
+	/*
+		Sends the position and the velocity to travel to the servo and updates the position.
+		A span of the middle value is checked for to avoid servo writing when for example a joystick is in the center.
+		Also accounts for end ranges
+	*/
+	if ((servo->analog_Map > (servo->analog_Map_Mid + 5) || servo->analog_Map < (servo->analog_Map_Mid - 5)) &&
+		servo->position <= servo->position_Max && servo->velocity == servo->velocity_Increasing) {
+		pca9685_set_pwm(servo->address, 0, (servo->position + servo->velocity));
+		servo->position += servo->velocity;
+	}
+	else if ((servo->analog_Map > (servo->analog_Map_Mid + 5) || servo->analog_Map < (servo->analog_Map_Mid - 5)) &&
+		servo->position >= servo->position_Min && servo->velocity == servo->velocity_Decreasing) {
+		pca9685_set_pwm(servo->address, 0, (servo->position + servo->velocity));
+		servo->position += servo->velocity;
+	}
 }
