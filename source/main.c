@@ -49,10 +49,10 @@ int main(void) {
 	button_init();
 
 
-<<<<<<< HEAD
 	pca9685_set_prescaler(prescalerValue);
 	pca9685_servo_start_positon(servoBottom, servoClaw, servoVertical, servoHorizontal);
 	char char_From_Esp32;
+
 	while (1) {
 		servoBottom.analog_Map = map(joystick_1_X_Value, 0, 1023, servoBottom.position_Min, servoBottom.position_Max);
 		servoClaw.analog_Map = map(joystick_1_Y_Value, 0, 1023, servoClaw.position_Min, servoClaw.position_Max);
