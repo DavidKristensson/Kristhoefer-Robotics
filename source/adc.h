@@ -4,6 +4,6 @@
 #include <avr/pgmspace.h>
 #include <avr/io.h>
 
-void init_single_conversion_mode();
+void adc_init();
 
 #endif

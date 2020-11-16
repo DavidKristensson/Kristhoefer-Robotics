@@ -172,15 +172,15 @@ void write_byte(uint8_t controlRegister, uint8_t byte) {
 		Stop communication and make sure device is finished with writing.
 	*/
 	i2c_start();
-	i2c_meaningful_status(i2c_get_status());	// START
+	//i2c_meaningful_status(i2c_get_status());	// START
 	i2c_xmit_addr(0x80, I2C_W);					// should be 0x80 but try 0x40 aswell
-	i2c_meaningful_status(i2c_get_status());	// MT SLA + W, ACK
+	//i2c_meaningful_status(i2c_get_status());	// MT SLA + W, ACK
 
 	i2c_xmit_byte(controlRegister);				
-	i2c_meaningful_status(i2c_get_status());	// MT DATA+W, ACK
+	//i2c_meaningful_status(i2c_get_status());	// MT DATA+W, ACK
 
 	i2c_xmit_byte(byte);
-	i2c_meaningful_status(i2c_get_status());	// MT DATA+W, ACK
+	//i2c_meaningful_status(i2c_get_status());	// MT DATA+W, ACK
 
 	i2c_stop();
 	

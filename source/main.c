@@ -25,74 +25,44 @@ volatile unsigned int joystick_2_X_Value = 0;
 volatile unsigned int joystick_2_Y_Value = 0;
 
 volatile unsigned int ADCincrementor = 0;
-unsigned long mappedValue = 0;
 
-/* Function to map the joystick value 0-1023 into robot servos values 400-2000 */
-long mapValueFromJoystick(long x, long in_min, long in_max, long out_min, long out_max) {
-	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
+//Position_Max, Position_Min, Position, dsIncreasing, dsDeacreasing, ds, analog, analogLast, analogMid, address
+SERVO servoBottom =		{ 0x7D0, 0x190,	0x41C, 4, -4, 4, 0, 0, 1188, PCA9685_LED0_ON_L };
+SERVO servoClaw =		{ 0x76C, 0x5DC, 0x5DC, 4, -4, 4, 0, 0, 1698, PCA9685_LED3_ON_L };
+SERVO servoVertical	=	{ 0x7CF, 0x514, 0x514, 4, -4, 4, 0, 0, 1655, PCA9685_LED2_ON_L };
+SERVO servoHorizontal = { 0x7D0, 0x2BC, 0x4B0, 4, -4, 4, 0, 0, 1365, PCA9685_LED1_ON_L };
 
 int main(void) {
 	uint8_t prescalerValue = 0x64;
 	timer0_init();
 	uart_init();
-	init_single_conversion_mode();
+	adc_init();
 	i2c_init();
 
 
 	pca9685_set_prescaler(prescalerValue);
+	pca9685_servo_start_positon(servoBottom, servoClaw, servoVertical, servoHorizontal);
 
-	pca9685_set_pwm(bottomServo, 0, 0x41C);
-	//pca9685_set_pwm(horizontalServo, 0, 0x3E8);
-	//pca9685_set_pwm(verticalServo, 0, 0x640);
-	//pca9685_set_pwm(clawServo, 0, 0x5DC);
-	
-
-	/*
-		Bottom servo:
-			Min val: 0x190 - Decimal: 400
-			Max val: 0x7D0 - Decimal: 2000
-			Middle val: 0x41C
-		Horizontal servo:
-			Min val: 0x2BC Watch out for vertical servo values
-			Max val: 0x7D0
-			Middle val: 0x3E8
-		Vertical servo:
-			Min val: 0x514
-			Max val: 0x7D0
-			Middle val: 0x640
-		Claw servo:
-			Min val: 0x5DC - Decimal: 1500 
-			Max val: 0x76C - Decimal: 1900
-			Mid val: 0x6A4 - Decimal: 1700
-	*/
 	while (1) {
-		/* All values mapped here for test. We use min 400 and max 2000. */
+		servoBottom.analog_Map = map(joystick_1_X_Value, 0, 1023, servoBottom.position_Min, servoBottom.position_Max);
+		servoClaw.analog_Map = map(joystick_1_Y_Value, 0, 1023, servoClaw.position_Min, servoClaw.position_Max);
+		servoVertical.analog_Map = map(joystick_2_X_Value, 0, 1023, servoVertical.position_Min, servoVertical.position_Max);
+		servoHorizontal.analog_Map = map(joystick_2_Y_Value, 0, 1023, servoHorizontal.position_Min, servoHorizontal.position_Max);
 
-		/* Bottom servo mapped value */
-		mappedValue = mapValueFromJoystick(joystick_1_X_Value, 0, 1023, 400, 2000); // J1_X BOTTOM
-		pca9685_set_pwm(bottomServo, 0, mappedValue);
-		
-		mappedValue = mapValueFromJoystick(joystick_1_Y_Value, 0, 1023, 1100, 1900); // J1_X BOTTOM
-		if (mappedValue < 1500) {
-			mappedValue = 1500 + (1500 - mappedValue);
-		}
-		pca9685_set_pwm(clawServo, 0, mappedValue);
-		printf_P(PSTR("claw value: %d\n"), mappedValue);
-		///* Left side vertical servo mapped value */
-		//mappedValue = mapValueFromJoystick(joystick_1_Y_Value, 0, 1023, 400, 2000); // J1_Y LEFT SIDE
-		//printf_P(PSTR("mapped Left: %d\n"), mappedValue);
+		pca9685_set_velocity(&servoBottom);
+		pca9685_set_velocity(&servoClaw);
+		pca9685_set_velocity(&servoVertical);
+		pca9685_set_velocity(&servoHorizontal);
 
-		///* Right side horizontal servo mapped value */
-		//mappedValue = mapValueFromJoystick(joystick_2_X_Value, 0, 1023, 400, 2000); // J2_X = RIGHT SIDE
-		//printf_P(PSTR("mapped Right: %d\n"), mappedValue);
+		pca9685_step_servo(&servoBottom);
+		pca9685_step_servo(&servoClaw);
+		pca9685_step_servo(&servoVertical);
+		pca9685_step_servo(&servoHorizontal);
 
-		///* Claw servo mapped value */
-		//mappedValue = mapValueFromJoystick(joystick_2_Y_Value, 0, 1023, 400, 2000); // J2_Y = CLAW
-		//printf_P(PSTR("mapped Claw: %d\n"), mappedValue);
-
-
-
+		servoBottom.analog_Map_Last = servoBottom.analog_Map;
+		servoClaw.analog_Map_Last = servoClaw.analog_Map;
+		servoVertical.analog_Map_Last = servoVertical.analog_Map;
+		servoHorizontal.analog_Map_Last = servoHorizontal.analog_Map;
 	}
 
 	return 0;
@@ -130,7 +100,8 @@ ISR(ADC_vect) {
 		ADMUX &= ~(1 << MUX1);
 		ADMUX &= ~(1 << MUX2);
 		ADMUX &= ~(1 << MUX3);
-		joystick_1_Y_Value = previousReadADCvalue;
+		//joystick_1_Y_Value = previousReadADCvalue;
+		joystick_1_X_Value = previousReadADCvalue;
 		//printf_P(PSTR("Joystick 1 Y-axis value: %d\n"), joystick_1_Y_Value);
 	}
 
@@ -142,7 +113,8 @@ ISR(ADC_vect) {
 		ADMUX |=  (1 << MUX1);
 		ADMUX &= ~(1 << MUX2);
 		ADMUX &= ~(1 << MUX3);
-		joystick_1_X_Value = previousReadADCvalue;
+		//joystick_1_X_Value = previousReadADCvalue;
+		joystick_1_Y_Value = previousReadADCvalue;
 		//printf_P(PSTR("Joystick 1 X-axis value: %d\n"), joystick_1_X_Value);
 	}	
 

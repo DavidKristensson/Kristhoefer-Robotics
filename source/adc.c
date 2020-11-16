@@ -1,7 +1,7 @@
 #include <avr/interrupt.h>
 #include "adc.h"
 
-void init_single_conversion_mode(){
+void adc_init(){
     /* Setup ADMUX for the next ADC reading so that
     next time in this interrupt function we will read from
     ADC0 ie A0 analog input on arduino */
