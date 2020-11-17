@@ -77,48 +77,52 @@ void pca9685_step_servo(SERVO* servo) {
 }
 
 void pca9685_step_servo_uart(char charFromEsp32, SERVO* servo1, SERVO* servo2, SERVO* servo3, SERVO* servo4){
-	//Bottom
+	/* Bottom servo movement right */
 	if (charFromEsp32 == 'r' && servo1->position < servo1->position_Max) {
 		servo1->velocity = servo1->velocity_Increasing;
-		pca9685_set_pwm(servo1->address, 0, (servo1->position + servo1->velocity));
-		servo1->position += servo1->velocity;
+		pca9685_set_pwm(servo1->address, 0, (servo1->position + (servo1->velocity * 8)));
+		servo1->position += (servo1->velocity * 8);
 	}
+	/* Bottom servo movement left */
 	else if (charFromEsp32 == 'l' && servo1->position > servo1->position_Min) {
 		servo1->velocity = servo1->velocity_Decreasing;
-		pca9685_set_pwm(servo1->address, 0, (servo1->position + servo1->velocity));
-		servo1->position += servo1->velocity;
+		pca9685_set_pwm(servo1->address, 0, (servo1->position + (servo1->velocity * 8)));
+		servo1->position += (servo1->velocity * 8);
 	}
-	//Claw
+	/* Claw servo opening */
 	else if (charFromEsp32 == 'o' && servo2->position < servo2->position_Max) {
 		servo2->velocity = servo2->velocity_Increasing;
-		pca9685_set_pwm(servo2->address, 0, (servo2->position + servo2->velocity));
-		servo2->position += servo2->velocity;
+		pca9685_set_pwm(servo2->address, 0, (servo2->position + (servo2->velocity * 8)));
+		servo2->position += (servo2->velocity * 8);
 	}
+	/* Claw servo closing */
 	else if (charFromEsp32 == 'c' && servo2->position > servo2->position_Min) {
 		servo2->velocity = servo2->velocity_Decreasing;
-		pca9685_set_pwm(servo2->address, 0, (servo2->position + servo2->velocity));
-		servo2->position += servo2->velocity;
+		pca9685_set_pwm(servo2->address, 0, (servo2->position + (servo2->velocity * 8)));
+		servo2->position += (servo2->velocity * 8);
 	}
-	//Vertical
+	/* Vertical servo up */
 	else if (charFromEsp32 == 'u' && servo3->position < servo3->position_Max) {
 		servo3->velocity = servo3->velocity_Increasing;
-		pca9685_set_pwm(servo3->address, 0, (servo3->position + servo3->velocity));
-		servo3->position += servo3->velocity;
+		pca9685_set_pwm(servo3->address, 0, (servo3->position + (servo3->velocity * 8)));
+		servo3->position += (servo3->velocity * 8);
 	}
+	/* Vertical servo down */
 	else if (charFromEsp32 == 'd' && servo3->position > servo3->position_Min) {
 		servo3->velocity = servo3->velocity_Decreasing;
-		pca9685_set_pwm(servo3->address, 0, (servo3->position + servo3->velocity));
-		servo3->position += servo3->velocity;
+		pca9685_set_pwm(servo3->address, 0, (servo3->position + (servo3->velocity * 8)));
+		servo3->position += (servo3->velocity * 8);
 	}
-	//Horizontal
+	/* Horizontal servo forward */
 	else if (charFromEsp32 == 'f' && servo4->position < servo4->position_Max) {
 		servo4->velocity = servo4->velocity_Increasing;
-		pca9685_set_pwm(servo4->address, 0, (servo4->position + servo4->velocity));
-		servo4->position += servo4->velocity;
+		pca9685_set_pwm(servo4->address, 0, (servo4->position + (servo4->velocity * 8)));
+		servo4->position += (servo4->velocity * 8);
 	}
+	/* Horizontal servo backwards */
 	else if (charFromEsp32 == 'b' && servo4->position > servo4->position_Min) {
 		servo4->velocity = servo4->velocity_Decreasing;
-		pca9685_set_pwm(servo4->address, 0, (servo4->position + servo4->velocity));
-		servo4->position += servo4->velocity;
+		pca9685_set_pwm(servo4->address, 0, (servo4->position + (servo4->velocity * 8)));
+		servo4->position += (servo4->velocity * 8);
 	}
 }
