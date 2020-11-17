@@ -16,6 +16,8 @@
 #include "timer.h"
 #include "button.h"
 
+#include "statehandler.h"
+
 /* Value we get from reading of ADC */
 volatile unsigned int previousReadADCvalue = 0;
 
@@ -34,10 +36,15 @@ uint8_t button2_State_Last = 0;
 uint8_t button1_Flag = 0;
 uint8_t button2_Flag = 0;
 
+/* Initiate statehandler and 
+assign the starting state as manual controlled */
+ROBOT_CONTROL_STATES currentControlState;
+
+
 //Position_Max, Position_Min, Position, dsIncreasing, dsDeacreasing, ds, analog, analogLast, analogMid, address
-SERVO servoBottom =		{ 0x7D0, 0x190,	0x41C, 4, -4, 4, 0, 0, 1188, PCA9685_LED0_ON_L };
+SERVO servoBottom =		{ 0x7D0, 0x190,	0x41C, 4, -4, 4, 0, 0, 1212, PCA9685_LED0_ON_L };
 SERVO servoClaw =		{ 0x76C, 0x5DC, 0x5DC, 4, -4, 4, 0, 0, 1698, PCA9685_LED3_ON_L };
-SERVO servoVertical	=	{ 0x7CF, 0x514, 0x514, 4, -4, 4, 0, 0, 1655, PCA9685_LED2_ON_L };
+SERVO servoVertical	=	{ 0x7CF, 0x514, 0x514, 4, -4, 4, 0, 0, 1645, PCA9685_LED2_ON_L };
 SERVO servoHorizontal = { 0x7D0, 0x2BC, 0x4B0, 4, -4, 4, 0, 0, 1365, PCA9685_LED1_ON_L };
 
 int main(void) {
@@ -48,34 +55,46 @@ int main(void) {
 	i2c_init();
 	button_init();
 
+	currentControlState = MANUAL_CONTROL;
+
 
 	pca9685_set_prescaler(prescalerValue);
-	pca9685_servo_start_positon(servoBottom, servoClaw, servoVertical, servoHorizontal);
+	pca9685_servo_start_position(servoBottom, servoClaw, servoVertical, servoHorizontal);
+	
+
+
 
 	while (1) {
-		servoBottom.analog_Map = map(joystick_1_X_Value, 0, 1023, servoBottom.position_Min, servoBottom.position_Max);
-		servoClaw.analog_Map = map(joystick_1_Y_Value, 0, 1023, servoClaw.position_Min, servoClaw.position_Max);
-		servoVertical.analog_Map = map(joystick_2_X_Value, 0, 1023, servoVertical.position_Min, servoVertical.position_Max);
-		servoHorizontal.analog_Map = map(joystick_2_Y_Value, 0, 1023, servoHorizontal.position_Min, servoHorizontal.position_Max);
 
-		pca9685_set_velocity(&servoBottom);
-		pca9685_set_velocity(&servoClaw);
-		pca9685_set_velocity(&servoVertical);
-		pca9685_set_velocity(&servoHorizontal);
+		currentControlState = state_changer(currentControlState, &button1_Flag);
 
-		pca9685_step_servo(&servoBottom);
-		pca9685_step_servo(&servoClaw);
-		pca9685_step_servo(&servoVertical);
-		pca9685_step_servo(&servoHorizontal);
+		if (currentControlState == MANUAL_CONTROL) {
+			servoBottom.analog_Map = map(joystick_1_X_Value, 0, 1023, servoBottom.position_Max, servoBottom.position_Min);
+			servoClaw.analog_Map = map(joystick_1_Y_Value, 0, 1023, servoClaw.position_Min, servoClaw.position_Max);
+			servoVertical.analog_Map = map(joystick_2_X_Value, 0, 1023, servoVertical.position_Max, servoVertical.position_Min);
+			servoHorizontal.analog_Map = map(joystick_2_Y_Value, 0, 1023, servoHorizontal.position_Min, servoHorizontal.position_Max);
+			//printf_P(PSTR("vert analog map val: %d\n"), servoVertical.analog_Map);
+			pca9685_set_velocity(&servoBottom);
+			pca9685_set_velocity(&servoClaw);
+			pca9685_set_velocity(&servoVertical);
+			pca9685_set_velocity(&servoHorizontal);
 
-		servoBottom.analog_Map_Last = servoBottom.analog_Map;
-		servoClaw.analog_Map_Last = servoClaw.analog_Map;
-		servoVertical.analog_Map_Last = servoVertical.analog_Map;
-		servoHorizontal.analog_Map_Last = servoHorizontal.analog_Map;
+			pca9685_step_servo(&servoBottom);
+			pca9685_step_servo(&servoClaw);
+			pca9685_step_servo(&servoVertical);
+			pca9685_step_servo(&servoHorizontal);
 
-		printf_P(PSTR("button1_Flag: %d\n"), button1_Flag);
-		printf_P(PSTR("button2_Flag: %d\n"), button2_Flag);
-		printf_P(PSTR("============================\n"));
+			servoBottom.analog_Map_Last = servoBottom.analog_Map;
+			servoClaw.analog_Map_Last = servoClaw.analog_Map;
+			servoVertical.analog_Map_Last = servoVertical.analog_Map;
+			servoHorizontal.analog_Map_Last = servoHorizontal.analog_Map;
+		}
+		else if (currentControlState == WEBSERVER_CONTROL) {
+				char char_From_Esp32 = uart_getchar(&button1_Flag);
+				//printf_P(PSTR("Message from arduino is: %c\n"), char_From_Esp32);
+				/* act on message received from esp32 */
+				pca9685_step_servo_uart(char_From_Esp32, &servoBottom, &servoClaw, &servoVertical, &servoHorizontal);
+		}
 	}
 
 	return 0;
@@ -83,6 +102,10 @@ int main(void) {
 
 /* timer0 interrupt to execute every 10 ms  */
 ISR(TIMER0_COMPA_vect){
+
+
+
+
 	button_set_buttonStateNow(&button1_State_Now, PIND, PD4);
 	button_set_buttonStateNow(&button2_State_Now, PIND, PD2);
 	button_set_flag(&button1_State_Now, &button1_State_Last, &button1_Flag, 1);
@@ -93,6 +116,9 @@ ISR(TIMER0_COMPA_vect){
 	conversion is done the ADC_vect 
 	interrupt function is started */
 	ADCSRA |= (1 << ADSC);  
+
+
+	
 
 }
 

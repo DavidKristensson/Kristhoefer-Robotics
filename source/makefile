@@ -7,8 +7,10 @@ SOURCES = \
 		  timer.c \
 		  serial.c \
 		  pca9685.c \
-		  button.c
-PORT =/dev/ttyS5
+		  button.c \
+		  statehandler.c
+
+PORT =/dev/ttyS3
 MCU=atmega328p
 
 CC =avr-gcc

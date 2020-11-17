@@ -25,7 +25,7 @@ void pca9685_set_pwm(uint8_t servoAddress, uint16_t on, uint16_t off){
 	write_byte(servoAddress + 3, (off >> 8));
 }
 
-void pca9685_servo_start_positon(SERVO servo1, SERVO servo2, SERVO servo3, SERVO servo4) {
+void pca9685_servo_start_position(SERVO servo1, SERVO servo2, SERVO servo3, SERVO servo4) {
 	/*
 		Send position to each servo
 	*/
@@ -73,5 +73,52 @@ void pca9685_step_servo(SERVO* servo) {
 		servo->position >= servo->position_Min && servo->velocity == servo->velocity_Decreasing) {
 		pca9685_set_pwm(servo->address, 0, (servo->position + servo->velocity));
 		servo->position += servo->velocity;
+	}
+}
+
+void pca9685_step_servo_uart(char charFromEsp32, SERVO* servo1, SERVO* servo2, SERVO* servo3, SERVO* servo4){
+	//Bottom
+	if (charFromEsp32 == 'r' && servo1->position < servo1->position_Max) {
+		servo1->velocity = servo1->velocity_Increasing;
+		pca9685_set_pwm(servo1->address, 0, (servo1->position + servo1->velocity));
+		servo1->position += servo1->velocity;
+	}
+	else if (charFromEsp32 == 'l' && servo1->position > servo1->position_Min) {
+		servo1->velocity = servo1->velocity_Decreasing;
+		pca9685_set_pwm(servo1->address, 0, (servo1->position + servo1->velocity));
+		servo1->position += servo1->velocity;
+	}
+	//Claw
+	else if (charFromEsp32 == 'o' && servo2->position < servo2->position_Max) {
+		servo2->velocity = servo2->velocity_Increasing;
+		pca9685_set_pwm(servo2->address, 0, (servo2->position + servo2->velocity));
+		servo2->position += servo2->velocity;
+	}
+	else if (charFromEsp32 == 'c' && servo2->position > servo2->position_Min) {
+		servo2->velocity = servo2->velocity_Decreasing;
+		pca9685_set_pwm(servo2->address, 0, (servo2->position + servo2->velocity));
+		servo2->position += servo2->velocity;
+	}
+	//Vertical
+	else if (charFromEsp32 == 'u' && servo3->position < servo3->position_Max) {
+		servo3->velocity = servo3->velocity_Increasing;
+		pca9685_set_pwm(servo3->address, 0, (servo3->position + servo3->velocity));
+		servo3->position += servo3->velocity;
+	}
+	else if (charFromEsp32 == 'd' && servo3->position > servo3->position_Min) {
+		servo3->velocity = servo3->velocity_Decreasing;
+		pca9685_set_pwm(servo3->address, 0, (servo3->position + servo3->velocity));
+		servo3->position += servo3->velocity;
+	}
+	//Horizontal
+	else if (charFromEsp32 == 'f' && servo4->position < servo4->position_Max) {
+		servo4->velocity = servo4->velocity_Increasing;
+		pca9685_set_pwm(servo4->address, 0, (servo4->position + servo4->velocity));
+		servo4->position += servo4->velocity;
+	}
+	else if (charFromEsp32 == 'b' && servo4->position > servo4->position_Min) {
+		servo4->velocity = servo4->velocity_Decreasing;
+		pca9685_set_pwm(servo4->address, 0, (servo4->position + servo4->velocity));
+		servo4->position += servo4->velocity;
 	}
 }

@@ -11,7 +11,10 @@ void uart_init(void);
 
 int uart_putchar(char chr, FILE* stream);
 
-char uart_getchar(void);
+char uart_getchar(uint8_t *buttonFlag);
 
+/*
+void uart_get_string_from_user(unsigned char* stringInMain);
+*/
 #endif
 
