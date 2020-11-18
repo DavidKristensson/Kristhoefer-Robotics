@@ -73,7 +73,7 @@ int main(void) {
 			servoClaw.analog_Map = map(joystick_1_Y_Value, 0, 1023, servoClaw.position_Min, servoClaw.position_Max);
 			servoVertical.analog_Map = map(joystick_2_X_Value, 0, 1023, servoVertical.position_Max, servoVertical.position_Min);
 			servoHorizontal.analog_Map = map(joystick_2_Y_Value, 0, 1023, servoHorizontal.position_Min, servoHorizontal.position_Max);
-			//printf_P(PSTR("vert analog map val: %d\n"), servoVertical.analog_Map);
+			printf_P(PSTR("vert analog map val: %d\n"), servoVertical.analog_Map);
 			pca9685_set_velocity(&servoBottom);
 			pca9685_set_velocity(&servoClaw);
 			pca9685_set_velocity(&servoVertical);

@@ -1,0 +1,820 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>ESP32 OV2460</title>
+        <style>
+            body {
+                font-family: Arial,Helvetica,sans-serif;
+                background: #181818;
+                color: #EFEFEF;
+                font-size: 16px
+            }
+
+            h2 {
+                font-size: 18px
+            }
+
+            section.main {
+                display: flex
+            }
+
+            #menu,section.main {
+                flex-direction: column
+            }
+
+            #menu {
+                display: none;
+                flex-wrap: nowrap;
+                min-width: 340px;
+                background: #363636;
+                padding: 8px;
+                border-radius: 4px;
+                margin-top: -10px;
+                margin-right: 10px;
+            }
+
+            #content {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: stretch
+            }
+
+            figure {
+                padding: 0px;
+                margin: 0;
+                -webkit-margin-before: 0;
+                margin-block-start: 0;
+                -webkit-margin-after: 0;
+                margin-block-end: 0;
+                -webkit-margin-start: 0;
+                margin-inline-start: 0;
+                -webkit-margin-end: 0;
+                margin-inline-end: 0
+            }
+
+            figure img {
+                display: block;
+                width: 100%;
+                height: auto;
+                border-radius: 4px;
+                margin-top: 8px;
+            }
+
+            @media (min-width: 800px) and (orientation:landscape) {
+                #content {
+                    display:flex;
+                    flex-wrap: nowrap;
+                    align-items: stretch
+                }
+
+                figure img {
+                    display: block;
+                    max-width: 100%;
+                    max-height: calc(100vh - 40px);
+                    width: auto;
+                    height: auto
+                }
+
+                figure {
+                    padding: 0 0 0 0px;
+                    margin: 0;
+                    -webkit-margin-before: 0;
+                    margin-block-start: 0;
+                    -webkit-margin-after: 0;
+                    margin-block-end: 0;
+                    -webkit-margin-start: 0;
+                    margin-inline-start: 0;
+                    -webkit-margin-end: 0;
+                    margin-inline-end: 0
+                }
+            }
+
+            section#buttons {
+                display: flex;
+                flex-wrap: nowrap;
+                justify-content: space-between
+            }
+
+            #nav-toggle {
+                cursor: pointer;
+                display: block
+            }
+
+            #nav-toggle-cb {
+                outline: 0;
+                opacity: 0;
+                width: 0;
+                height: 0
+            }
+
+            #nav-toggle-cb:checked+#menu {
+                display: flex
+            }
+
+            .input-group {
+                display: flex;
+                flex-wrap: nowrap;
+                line-height: 22px;
+                margin: 5px 0
+            }
+
+            .input-group>label {
+                display: inline-block;
+                padding-right: 10px;
+                min-width: 47%
+            }
+
+            .input-group input,.input-group select {
+                flex-grow: 1
+            }
+
+            .range-max,.range-min {
+                display: inline-block;
+                padding: 0 5px
+            }
+
+            button {
+                display: block;
+                margin: 5px;
+                padding: 0 12px;
+                border: 0;
+                line-height: 28px;
+                cursor: pointer;
+                color: #fff;
+                background: #ff3034;
+                border-radius: 5px;
+                font-size: 16px;
+                outline: 0
+            }
+
+            button:hover {
+                background: #ff494d
+            }
+
+            button:active {
+                background: #f21c21
+            }
+
+            button.disabled {
+                cursor: default;
+                background: #a0a0a0
+            }
+
+            input[type=range] {
+                -webkit-appearance: none;
+                width: 100%;
+                height: 22px;
+                background: #363636;
+                cursor: pointer;
+                margin: 0
+            }
+
+            input[type=range]:focus {
+                outline: 0
+            }
+
+            input[type=range]::-webkit-slider-runnable-track {
+                width: 100%;
+                height: 2px;
+                cursor: pointer;
+                background: #EFEFEF;
+                border-radius: 0;
+                border: 0 solid #EFEFEF
+            }
+
+            input[type=range]::-webkit-slider-thumb {
+                border: 1px solid rgba(0,0,30,0);
+                height: 22px;
+                width: 22px;
+                border-radius: 50px;
+                background: #ff3034;
+                cursor: pointer;
+                -webkit-appearance: none;
+                margin-top: -11.5px
+            }
+
+            input[type=range]:focus::-webkit-slider-runnable-track {
+                background: #EFEFEF
+            }
+
+            input[type=range]::-moz-range-track {
+                width: 100%;
+                height: 2px;
+                cursor: pointer;
+                background: #EFEFEF;
+                border-radius: 0;
+                border: 0 solid #EFEFEF
+            }
+
+            input[type=range]::-moz-range-thumb {
+                border: 1px solid rgba(0,0,30,0);
+                height: 22px;
+                width: 22px;
+                border-radius: 50px;
+                background: #ff3034;
+                cursor: pointer
+            }
+
+            input[type=range]::-ms-track {
+                width: 100%;
+                height: 2px;
+                cursor: pointer;
+                background: 0 0;
+                border-color: transparent;
+                color: transparent
+            }
+
+            input[type=range]::-ms-fill-lower {
+                background: #EFEFEF;
+                border: 0 solid #EFEFEF;
+                border-radius: 0
+            }
+
+            input[type=range]::-ms-fill-upper {
+                background: #EFEFEF;
+                border: 0 solid #EFEFEF;
+                border-radius: 0
+            }
+
+            input[type=range]::-ms-thumb {
+                border: 1px solid rgba(0,0,30,0);
+                height: 22px;
+                width: 22px;
+                border-radius: 50px;
+                background: #ff3034;
+                cursor: pointer;
+                height: 2px
+            }
+
+            input[type=range]:focus::-ms-fill-lower {
+                background: #EFEFEF
+            }
+
+            input[type=range]:focus::-ms-fill-upper {
+                background: #363636
+            }
+
+            .switch {
+                display: block;
+                position: relative;
+                line-height: 22px;
+                font-size: 16px;
+                height: 22px
+            }
+
+            .switch input {
+                outline: 0;
+                opacity: 0;
+                width: 0;
+                height: 0
+            }
+
+            .slider {
+                width: 50px;
+                height: 22px;
+                border-radius: 22px;
+                cursor: pointer;
+                background-color: grey
+            }
+
+            .slider,.slider:before {
+                display: inline-block;
+                transition: .4s
+            }
+
+            .slider:before {
+                position: relative;
+                content: "";
+                border-radius: 50%;
+                height: 16px;
+                width: 16px;
+                left: 4px;
+                top: 3px;
+                background-color: #fff
+            }
+
+            input:checked+.slider {
+                background-color: #ff3034
+            }
+
+            input:checked+.slider:before {
+                -webkit-transform: translateX(26px);
+                transform: translateX(26px)
+            }
+
+            select {
+                border: 1px solid #363636;
+                font-size: 14px;
+                height: 22px;
+                outline: 0;
+                border-radius: 5px
+            }
+
+            .image-container {
+                position: relative;
+                min-width: 160px
+            }
+
+            .close {
+                position: absolute;
+                right: 5px;
+                top: 5px;
+                background: #ff3034;
+                width: 16px;
+                height: 16px;
+                border-radius: 100px;
+                color: #fff;
+                text-align: center;
+                line-height: 18px;
+                cursor: pointer
+            }
+
+            .hidden {
+                display: none
+            }
+        </style>
+    </head>
+    <body>
+        <section class="main">
+            <div id="logo">
+                <label for="nav-toggle-cb" id="nav-toggle">&#9776;&nbsp;&nbsp;Toggle OV2640 settings</label>
+            </div>
+            <div id="content">
+                <div id="sidebar">
+                    <input type="checkbox" id="nav-toggle-cb" checked="checked">
+                    <nav id="menu">
+                        <div class="input-group" id="framesize-group">
+                            <label for="framesize">Resolution</label>
+                            <select id="framesize" class="default-action">
+                                <option value="10">UXGA(1600x1200)</option>
+                                <option value="9">SXGA(1280x1024)</option>
+                                <option value="8">XGA(1024x768)</option>
+                                <option value="7">SVGA(800x600)</option>
+                                <option value="6">VGA(640x480)</option>
+                                <option value="5" selected="selected">CIF(400x296)</option>
+                                <option value="4">QVGA(320x240)</option>
+                                <option value="3">HQVGA(240x176)</option>
+                                <option value="0">QQVGA(160x120)</option>
+                            </select>
+                        </div>
+                        <div class="input-group" id="quality-group">
+                            <label for="quality">Quality</label>
+                            <div class="range-min">10</div>
+                            <input type="range" id="quality" min="10" max="63" value="10" class="default-action">
+                            <div class="range-max">63</div>
+                        </div>
+                        <div class="input-group" id="brightness-group">
+                            <label for="brightness">Brightness</label>
+                            <div class="range-min">-2</div>
+                            <input type="range" id="brightness" min="-2" max="2" value="0" class="default-action">
+                            <div class="range-max">2</div>
+                        </div>
+                        <div class="input-group" id="hmirror-group">
+                            <label for="hmirror">H-Mirror</label>
+                            <div class="switch">
+                                <input id="hmirror" type="checkbox" class="default-action" checked="checked">
+                                <label class="slider" for="hmirror"></label>
+                            </div>
+                        </div>
+                        <div class="input-group" id="vflip-group">
+                            <label for="vflip">V-Flip</label>
+                            <div class="switch">
+                                <input id="vflip" type="checkbox" class="default-action" checked="checked">
+                                <label class="slider" for="vflip"></label>
+                            </div>
+                        </div>
+                        <section id="buttons">
+                            <button id="toggle-stream">Start Stream</button>
+                            <button id="test-button">Click me test</button> 
+                            // testing with removing type = button and we see what happens!
+                        </section>
+                        <section id="buttons">
+                            <button id="move-up">Move up</button>
+                            <button id="move-forward">Move forward</button>
+                            <button id="move-down">Move down</button>
+                        </section>
+                        <section id="buttons">
+                            <button id="move-left">Move left</button>
+							<button id="_" class="disabled" disabled="disabled">________</button>
+                            <button id="move-right">Move right</button>
+                        </section>
+                        <section id="buttons">
+                            <button id="open-claw">Open claw</button>
+                            <button id="move-back">Move back</button>
+                            <button id="close-claw">Close claw</button>
+                        </section>
+                    </nav>
+                </div>
+                <figure>
+                    <div id="stream-container" class="image-container hidden">
+                        <div class="close" id="close-stream">×</div>
+                        <img id="stream" src="">
+                    </div>
+                </figure>
+            </div>
+        </section>
+        <script>
+document.addEventListener('DOMContentLoaded', function (event) {
+  var baseHost = document.location.origin
+  var streamUrl = baseHost + ':81'
+
+  const hide = el => {
+    el.classList.add('hidden')
+  }
+  const show = el => {
+    el.classList.remove('hidden')
+  }
+
+  const disable = el => {
+    el.classList.add('disabled')
+    el.disabled = true
+  }
+
+  const enable = el => {
+    el.classList.remove('disabled')
+    el.disabled = false
+  }
+
+  const updateValue = (el, value, updateRemote) => {
+    updateRemote = updateRemote == null ? true : updateRemote
+    let initialValue
+    if (el.type === 'checkbox') {
+      initialValue = el.checked
+      value = !!value
+      el.checked = value
+    } else {
+      initialValue = el.value
+      el.value = value
+    }
+
+    if (updateRemote && initialValue !== value) {
+      updateConfig(el);
+    } else if(!updateRemote){
+      if(el.id === "aec"){
+        value ? hide(exposure) : show(exposure)
+      } else if(el.id === "agc"){
+        if (value) {
+          show(gainCeiling)
+          hide(agcGain)
+        } else {
+          hide(gainCeiling)
+          show(agcGain)
+        }
+      } else if(el.id === "awb_gain"){
+        value ? show(wb) : hide(wb)
+      } else if(el.id === "face_recognize"){
+        value ? enable(enrollButton) : disable(enrollButton)
+      }
+    }
+  }
+  //////////////////// MOVE UP FUNCTION QUERY BELOW
+  function sendMoveUpQueryToArduino () {     
+    const moveUpQuery = `${baseHost}/control?var=move-up&val=1`
+    
+    fetch(moveUpQuery)
+      .then(response => {
+        console.log(`request to ${moveUpQuery} finished, status: ${response.status}`) 
+      })
+  }
+  //////////////////// MOVE FORWARD FUNCTION QUERY BELOW
+  function sendMoveForwardQueryToArduino () {     
+    const moveForwardQuery = `${baseHost}/control?var=move-forward&val=1`
+    
+    fetch(moveForwardQuery)
+      .then(response => {
+        console.log(`request to ${moveForwardQuery} finished, status: ${response.status}`) 
+      })
+  }
+  //////////////////// MOVE DOWN FUNCTION QUERY BELOW
+  function sendMoveDownQueryToArduino () {     
+    const moveDownQuery = `${baseHost}/control?var=move-down&val=1`
+    
+    fetch(moveDownQuery)
+      .then(response => {
+        console.log(`request to ${moveDownQuery} finished, status: ${response.status}`) 
+      })
+  }
+  //////////////////// MOVE LEFT FUNCTION QUERY BELOW
+  function sendMoveLeftQueryToArduino () {     
+    const moveLeftQuery = `${baseHost}/control?var=move-left&val=1`
+    
+    fetch(moveLeftQuery)
+      .then(response => {
+        console.log(`request to ${moveLeftQuery} finished, status: ${response.status}`) 
+      })
+  }
+  //////////////////// MOVE RIGHT FUNCTION QUERY BELOW
+  function sendMoveRightQueryToArduino () {     
+    const moveRightQuery = `${baseHost}/control?var=move-right&val=1`
+    
+    fetch(moveRightQuery)
+      .then(response => {
+        console.log(`request to ${moveRightQuery} finished, status: ${response.status}`) 
+      })
+  }
+  //////////////////// OPEN CLAW FUNCTION QUERY BELOW
+  function sendOpenClawQueryToArduino () {     
+    const openClawQuery = `${baseHost}/control?var=open-claw&val=1`
+    
+    fetch(openClawQuery)
+      .then(response => {
+        console.log(`request to ${openClawQuery} finished, status: ${response.status}`) 
+      })
+  }
+  //////////////////// MOVE BACK FUNCTION QUERY BELOW
+  function sendMoveBackQueryToArduino () {     
+    const moveBackQuery = `${baseHost}/control?var=move-back&val=1`
+    
+    fetch(moveBackQuery)
+      .then(response => {
+        console.log(`request to ${moveBackQuery} finished, status: ${response.status}`) 
+      })
+  }
+  //////////////////// CLOSE CLAW FUNCTION QUERY BELOW
+  function sendCloseClawQueryToArduino () {     
+    const closeClawQuery = `${baseHost}/control?var=close-claw&val=1`
+    
+    fetch(closeClawQuery)
+      .then(response => {
+        console.log(`request to ${closeClawQuery} finished, status: ${response.status}`) 
+      })
+  }
+  
+  
+  
+  
+  
+  
+  
+  //////////////////// NEW FUNCTION ABOVE
+  function updateConfig (el) { 
+    let value
+    switch (el.type) {
+      case 'checkbox':
+        value = el.checked ? 1 : 0
+        break
+      case 'range':
+      case 'select-one':
+        value = el.value
+        break
+      case 'button':
+      	value = el.value
+        break
+      case 'submit':
+        value = '1'
+        break
+      default:
+      	value = '1'
+        return
+    }
+
+    const query = `${baseHost}/control?var=${el.id}&val=${value}`
+
+    fetch(query)
+      .then(response => {
+        console.log(`request to ${query} finished, status: ${response.status}`) // HÄR SKICKAS VÄRDET
+      })
+  }
+
+  document
+    .querySelectorAll('.close')
+    .forEach(el => {
+      el.onclick = () => {
+        hide(el.parentNode)
+      }
+    })
+
+  // read initial values
+  fetch(`${baseHost}/status`)
+    .then(function (response) {
+      return response.json()
+    })
+    .then(function (state) {
+      document
+        .querySelectorAll('.default-action')
+        .forEach(el => {
+          updateValue(el, state[el.id], false)
+        })
+    })
+
+  const view = document.getElementById('stream')
+  const viewContainer = document.getElementById('stream-container')
+  const streamButton = document.getElementById('toggle-stream')
+  const closeButton = document.getElementById('close-stream')
+ 
+  const stopStream = () => {
+    window.stop();
+    streamButton.innerHTML = 'Start Stream'
+  }
+
+  const startStream = () => {
+    view.src = `${streamUrl}/stream`
+    show(viewContainer)
+    streamButton.innerHTML = 'Stop Stream'
+  }
+
+ 
+  // Attach actions to buttons
+   
+
+  closeButton.onclick = () => {
+    stopStream()
+    hide(viewContainer)
+  }
+
+  streamButton.onclick = () => {
+    const streamEnabled = streamButton.innerHTML === 'Stop Stream'
+    if (streamEnabled) {
+      stopStream()
+    } else {
+      startStream()
+    }
+  }
+
+  // Attach default on change action
+  document
+    .querySelectorAll('.default-action')
+    .forEach(el => {
+      el.onchange = () => updateConfig(el)
+    })
+
+  // Custom actions AND BUTTONS
+  
+  const moveUpButton = document.getElementById('move-up')
+  const moveForwardButton = document.getElementById('move-forward')
+  const moveDownButton = document.getElementById('move-down')
+  const moveLeftButton = document.getElementById('move-left')
+  const moveBackButton = document.getElementById('move-back')
+  const moveRightButton = document.getElementById('move-right')
+  const openClawButton = document.getElementById('open-claw')
+  const closeClawButton = document.getElementById('close-claw')
+  
+  var interval = null;
+  /////////////// MOVE UP BUTTON CODE BELOW ///////////////
+  moveUpButton.onmousedown = () => {    
+    sendMoveUpQueryToArduino();
+    interval = setInterval(sendMoveUpQueryToArduino, 100);
+  }
+  moveUpButton.onmouseup = () => { 
+    moveUpButton.innerHTML = "Move up";
+    if (interval ) {
+     clearInterval(interval);
+    }
+  }
+  /////////////// MOVE FORWARD BUTTON CODE BELOW ///////////////
+  moveForwardButton.onmousedown = () => {    
+    sendMoveForwardQueryToArduino();
+    interval = setInterval(sendMoveForwardQueryToArduino, 100);
+  }
+  moveForwardButton.onmouseup = () => { 
+    moveForwardButton.innerHTML = "Move forward";
+    if (interval ) {
+     clearInterval(interval);
+    }
+  }
+  /////////////// MOVE DOWN BUTTON CODE BELOW ///////////////
+  moveDownButton.onmousedown = () => {    
+    sendMoveDownQueryToArduino();
+    interval = setInterval(sendMoveDownQueryToArduino, 100);
+  }
+  moveDownButton.onmouseup = () => { 
+    moveDownButton.innerHTML = "Move down";
+    if (interval ) {
+     clearInterval(interval);
+    }
+  }
+  /////////////// MOVE LEFT BUTTON CODE BELOW ///////////////
+  moveLeftButton.onmousedown = () => {    
+    sendMoveLeftQueryToArduino();
+    interval = setInterval(sendMoveLeftQueryToArduino, 100);
+  }
+  moveLeftButton.onmouseup = () => { 
+    moveLeftButton.innerHTML = "Move left";
+    if (interval ) {
+     clearInterval(interval);
+    }
+  }
+  /////////////// MOVE RIGHT BUTTON CODE BELOW ///////////////
+  moveRightButton.onmousedown = () => {    
+    sendMoveRightQueryToArduino();
+    interval = setInterval(sendMoveRightQueryToArduino, 100);
+  }
+  moveRightButton.onmouseup = () => { 
+    moveRightButton.innerHTML = "Move right";
+    if (interval ) {
+     clearInterval(interval);
+    }
+  }
+  /////////////// OPEN CLAW BUTTON CODE BELOW ///////////////
+  openClawButton.onmousedown = () => {    
+    sendOpenClawQueryToArduino();
+    interval = setInterval(sendOpenClawQueryToArduino, 100);
+  }
+  openClawButton.onmouseup = () => { 
+    openClawButton.innerHTML = "Open claw";
+    if (interval ) {
+     clearInterval(interval);
+    }
+  }
+  /////////////// MOVE BACK BUTTON CODE BELOW ///////////////
+  moveBackButton.onmousedown = () => {    
+    sendMoveBackQueryToArduino();
+    interval = setInterval(sendMoveBackQueryToArduino, 100);
+  }
+  moveBackButton.onmouseup = () => { 
+    moveBackButton.innerHTML = "Move back";
+    if (interval ) {
+     clearInterval(interval);
+    }
+  }
+  /////////////// CLOSE CLAW BUTTON CODE BELOW ///////////////
+  closeClawButton.onmousedown = () => {    
+    sendCloseClawQueryToArduino();
+    interval = setInterval(sendCloseClawQueryToArduino, 100);
+  }
+  closeClawButton.onmouseup = () => { 
+    closeClawButton.innerHTML = "Close claw";
+    if (interval ) {
+     clearInterval(interval);
+    }
+  }
+  
+  
+  // Gain
+  const agc = document.getElementById('agc')
+  const agcGain = document.getElementById('agc_gain-group')
+  const gainCeiling = document.getElementById('gainceiling-group')
+  agc.onchange = () => {
+    updateConfig(agc)
+    if (agc.checked) {
+      show(gainCeiling)
+      hide(agcGain)
+    } else {
+      hide(gainCeiling)
+      show(agcGain)
+    }
+  }
+
+  // Exposure
+  const aec = document.getElementById('aec')
+  const exposure = document.getElementById('aec_value-group')
+  aec.onchange = () => {
+    updateConfig(aec)
+    aec.checked ? hide(exposure) : show(exposure)
+  }
+
+  // AWB
+  const awb = document.getElementById('awb_gain')
+  const wb = document.getElementById('wb_mode-group')
+  awb.onchange = () => {
+    updateConfig(awb)
+    awb.checked ? show(wb) : hide(wb)
+  }
+
+  // Detection and framesize
+  const detect = document.getElementById('face_detect')
+  const recognize = document.getElementById('face_recognize')
+  const framesize = document.getElementById('framesize')
+
+  framesize.onchange = () => {
+    updateConfig(framesize)
+    if (framesize.value > 5) {
+      updateValue(detect, false)
+      updateValue(recognize, false)
+    }
+  }
+
+  detect.onchange = () => {
+    if (framesize.value > 5) {
+      alert("Please select CIF or lower resolution before enabling this feature!");
+      updateValue(detect, false)
+      return;
+    }
+    updateConfig(detect)
+    if (!detect.checked) {
+      disable(enrollButton)
+      updateValue(recognize, false)
+    }
+  }
+
+  recognize.onchange = () => {
+    if (framesize.value > 5) {
+      alert("Please select CIF or lower resolution before enabling this feature!");
+      updateValue(recognize, false)
+      return;
+    }
+    updateConfig(recognize)
+    if (recognize.checked) {
+      enable(enrollButton)
+      updateValue(detect, true)
+    } else {
+      disable(enrollButton)
+    }
+  }
+})
+
+        </script>
+    </body>
+</html>
