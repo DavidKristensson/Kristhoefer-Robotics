@@ -65,7 +65,13 @@ int main(void) {
 
 
 	while (1) {
+		/*
+			Change state if button flag has been raised
 
+			Control servos with joysticks through I2C to servo driver
+
+			Control servos with input from UART 
+		*/
 		currentControlState = state_changer(currentControlState, &button1_Flag);
 
 		if (currentControlState == MANUAL_CONTROL) {
@@ -73,7 +79,7 @@ int main(void) {
 			servoClaw.analog_Map = map(joystick_1_Y_Value, 0, 1023, servoClaw.position_Min, servoClaw.position_Max);
 			servoVertical.analog_Map = map(joystick_2_X_Value, 0, 1023, servoVertical.position_Max, servoVertical.position_Min);
 			servoHorizontal.analog_Map = map(joystick_2_Y_Value, 0, 1023, servoHorizontal.position_Min, servoHorizontal.position_Max);
-			printf_P(PSTR("vert analog map val: %d\n"), servoVertical.analog_Map);
+			
 			pca9685_set_velocity(&servoBottom);
 			pca9685_set_velocity(&servoClaw);
 			pca9685_set_velocity(&servoVertical);
@@ -91,7 +97,6 @@ int main(void) {
 		}
 		else if (currentControlState == WEBSERVER_CONTROL) {
 				char char_From_Esp32 = uart_getchar(&button1_Flag);
-				//printf_P(PSTR("Message from arduino is: %c\n"), char_From_Esp32);
 				/* act on message received from esp32 */
 				pca9685_step_servo_uart(char_From_Esp32, &servoBottom, &servoClaw, &servoVertical, &servoHorizontal);
 		}
@@ -102,10 +107,10 @@ int main(void) {
 
 /* timer0 interrupt to execute every 10 ms  */
 ISR(TIMER0_COMPA_vect){
-
-
-
-
+	/*
+		Listen to pins and set flag of buttons to react to.
+		Set the last button state
+	*/
 	button_set_buttonStateNow(&button1_State_Now, PIND, PD4);
 	button_set_buttonStateNow(&button2_State_Now, PIND, PD2);
 	button_set_flag(&button1_State_Now, &button1_State_Last, &button1_Flag, 1);
