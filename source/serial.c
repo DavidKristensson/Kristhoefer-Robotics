@@ -15,21 +15,6 @@ void uart_init(void) {
 
 	stdout = &uart_stdout;
 }
-/*
-void uart_get_string_from_user(unsigned char* stringInMain, uint8_t buttonFlag) { // Gets input from user with uart_getchar() 
-															  // until read character is \n, then null terminates
-															  // the string and saves it to stringInMain.
-	char character = 'a';
-
-	int i = 0;
-	while (character != '\n') {
-		character = uart_getchar(buttonFlag);
-		stringInMain[i] = character;
-		i++;
-	}
-	stringInMain[i] = '\0'; // Null terminate string
-}
-*/
 
 int uart_putchar(char chr, FILE *stream) {
 	if (chr == '\n') {

@@ -29,15 +29,17 @@ volatile unsigned int joystick_2_Y_Value = 0;
 
 volatile unsigned int ADCincrementor = 0;
 
-uint8_t button1_State_Now = 0; //This one is high when not pushed in for some reason
+uint8_t button1_State_Now = 0; //This one is high when not pushed
 uint8_t button2_State_Now = 0; //This one is low
 uint8_t button1_State_Last = 0;
 uint8_t button2_State_Last = 0;
 uint8_t button1_Flag = 0;
 uint8_t button2_Flag = 0;
 
-/* Initiate statehandler and 
-assign the starting state as manual controlled */
+/* 
+	Initiate statehandler and 
+	assign the starting state as manual controlled 
+*/
 ROBOT_CONTROL_STATES currentControlState;
 
 
@@ -48,6 +50,14 @@ SERVO servoVertical	=	{ 0x7CF, 0x514, 0x514, 4, -4, 4, 0, 0, 1645, PCA9685_LED2_
 SERVO servoHorizontal = { 0x7D0, 0x2BC, 0x4B0, 4, -4, 4, 0, 0, 1365, PCA9685_LED1_ON_L };
 
 int main(void) {
+	/*
+		Initiate functions 
+
+		Set starting state
+
+		Set prescaler of pca9685
+		Set starting position of all the servos
+	*/
 	uint8_t prescalerValue = 0x64;
 	timer0_init();
 	uart_init();
@@ -61,11 +71,14 @@ int main(void) {
 	pca9685_set_prescaler(prescalerValue);
 	pca9685_servo_start_position(servoBottom, servoClaw, servoVertical, servoHorizontal);
 	
-
-
-
 	while (1) {
+		/*
+			Change state if button flag has been raised
 
+			Control servos with joysticks through I2C to servo driver
+
+			Control servos with input from UART 
+		*/
 		currentControlState = state_changer(currentControlState, &button1_Flag);
 
 		if (currentControlState == MANUAL_CONTROL) {
@@ -73,7 +86,7 @@ int main(void) {
 			servoClaw.analog_Map = map(joystick_1_Y_Value, 0, 1023, servoClaw.position_Min, servoClaw.position_Max);
 			servoVertical.analog_Map = map(joystick_2_X_Value, 0, 1023, servoVertical.position_Max, servoVertical.position_Min);
 			servoHorizontal.analog_Map = map(joystick_2_Y_Value, 0, 1023, servoHorizontal.position_Min, servoHorizontal.position_Max);
-			printf_P(PSTR("vert analog map val: %d\n"), servoVertical.analog_Map);
+			
 			pca9685_set_velocity(&servoBottom);
 			pca9685_set_velocity(&servoClaw);
 			pca9685_set_velocity(&servoVertical);
@@ -91,8 +104,6 @@ int main(void) {
 		}
 		else if (currentControlState == WEBSERVER_CONTROL) {
 				char char_From_Esp32 = uart_getchar(&button1_Flag);
-				//printf_P(PSTR("Message from arduino is: %c\n"), char_From_Esp32);
-				/* act on message received from esp32 */
 				pca9685_step_servo_uart(char_From_Esp32, &servoBottom, &servoClaw, &servoVertical, &servoHorizontal);
 		}
 	}
@@ -100,26 +111,26 @@ int main(void) {
 	return 0;
 }
 
-/* timer0 interrupt to execute every 10 ms  */
+/* 
+	timer0 interrupt to execute every 10 ms  
+*/
 ISR(TIMER0_COMPA_vect){
+	/*
+		Listen to pins and set flag of buttons to react to.
+		Set the last button state
 
-
-
-
+		Starts adc conversion and when
+		conversion is done the ADC_vect
+		interrupt function is started
+	*/
 	button_set_buttonStateNow(&button1_State_Now, PIND, PD4);
 	button_set_buttonStateNow(&button2_State_Now, PIND, PD2);
 	button_set_flag(&button1_State_Now, &button1_State_Last, &button1_Flag, 1);
 	button_set_flag(&button2_State_Now, &button2_State_Last, &button2_Flag, 0);
 	button_set_buttonStateLast(&button1_State_Now, &button1_State_Last);
 	button_set_buttonStateLast(&button2_State_Now, &button2_State_Last);
-	/* Starts adc conversion and when 
-	conversion is done the ADC_vect 
-	interrupt function is started */
+
 	ADCSRA |= (1 << ADSC);  
-
-
-	
-
 }
 
 ISR(ADC_vect) {
@@ -135,7 +146,6 @@ ISR(ADC_vect) {
 	/* Combine the two bytes */
 	previousReadADCvalue = (high << 8) | low;
 
-	//printf_P(PSTR("General HEX check for admux register before if statements: %x\n"), ADMUX);
 
 	if (ADMUX == 0x40) {
 		/* Setup ADMUX for the next ADC reading so that
@@ -145,9 +155,7 @@ ISR(ADC_vect) {
 		ADMUX &= ~(1 << MUX1);
 		ADMUX &= ~(1 << MUX2);
 		ADMUX &= ~(1 << MUX3);
-		//joystick_1_Y_Value = previousReadADCvalue;
 		joystick_1_X_Value = previousReadADCvalue;
-		//printf_P(PSTR("Joystick 1 Y-axis value: %d\n"), joystick_1_Y_Value);
 	}
 
 	else if (ADMUX == 0x41) {
@@ -158,9 +166,7 @@ ISR(ADC_vect) {
 		ADMUX |=  (1 << MUX1);
 		ADMUX &= ~(1 << MUX2);
 		ADMUX &= ~(1 << MUX3);
-		//joystick_1_X_Value = previousReadADCvalue;
 		joystick_1_Y_Value = previousReadADCvalue;
-		//printf_P(PSTR("Joystick 1 X-axis value: %d\n"), joystick_1_X_Value);
 	}	
 
 	else if (ADMUX == 0x42) {		
@@ -172,7 +178,6 @@ ISR(ADC_vect) {
 		ADMUX &= ~(1 << MUX2);
 		ADMUX &= ~(1 << MUX3);
 		joystick_2_Y_Value = previousReadADCvalue;
-		//printf_P(PSTR("Joystick 2 Y-axis value: %d\n"), joystick_2_Y_Value);
 	}
 
 	else if (ADMUX == 0x43) {	
@@ -184,7 +189,6 @@ ISR(ADC_vect) {
 		ADMUX &= ~(1 << MUX2);
 		ADMUX &= ~(1 << MUX3);
 		joystick_2_X_Value = previousReadADCvalue;
-		//printf_P(PSTR("Joystick 2 X-axis value: %d\n"), joystick_2_X_Value);
 	}
 }
 
