@@ -2,12 +2,12 @@
 
 void pca9685_set_prescaler(uint8_t prescaler) {
 	/*
-	Prescale value = (osc_clock / (4096 * update_rate)) - 1
-	0x79 = 121 = (25 Mhz / (4096 * 50)) - 1  // 50 hz
-	0x64 = 100 = (25 Mhz / (4096 * 60)) -1 // 60 hz
+		Prescale value = (osc_clock / (4096 * update_rate)) - 1
+		0x79 = 121 = (25 Mhz / (4096 * 50)) - 1  // 50 hz
+		0x64 = 100 = (25 Mhz / (4096 * 60)) -1 // 60 hz
 
-	Sleep mode enabled and after changing prescaler disabled for continous normal operation
-*/
+		Sleep mode enabled and after changing prescaler disabled for continous normal operation
+	*/
 	write_byte(PCA9685_MODE1, 0x01);
 	write_byte(PCA9685_PRESCALE, prescaler);
 	write_byte(PCA9685_MODE1, 0x00);
